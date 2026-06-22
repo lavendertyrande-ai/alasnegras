@@ -51,8 +51,8 @@
                         </div>
                     </div>
 
-                    {% if session.get('es_admin') and not session.get('modo_admin') %}
-                        <a href="{{ url_for('admin_login') }}" class="admin-link">⚙️ Admin</a>
+                    {% if not session.get('modo_admin') %}
+                        <a href="{{ url_for('admin_codigo') }}" class="admin-link">⚙️</a>
                     {% endif %}
 
                     {% if session.get('modo_admin') %}
