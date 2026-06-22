@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% set banner = "img/calendario.png" %}
+{% set title = "Calendario semanal" %}
+
+{% block content %}
+<h1>Calendario semanal</h1>
+<p>Reservas de lunes a sábado, de 15:00 a 23:00.</p>
+
+<span class="scroll-hint">👉 Desliza para ver todos los días</span>
+
+<div class="calendario-scroll">
+<div class="calendario-semanal">
+
+    <!-- Encabezado -->
+    <div class="fila encabezado">
+        <div class="hora-col"></div>
+        {% for dia in ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"] %}
+            <div class="dia-col">{{ dia }}</div>
+        {% endfor %}
+    </div>
+
+    <!-- Filas por hora -->
+    {% for hora in range(15, 24) %}
+    <div class="fila">
+        <div class="hora-col">{{ "%02d:00" % hora }}</div>
+
+        {% for dia in range(0, 7) %}
+        <div class="celda">
+            {% set slot = slots.get((dia, hora)) %}
+            {% if slot and slot.reservas %}
+                {% for r in slot.reservas %}
+                    <div class="directo-card">
+                        <strong>{{ r.usuario.display_name or r.usuario.login }}</strong>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <span class="vacio">—</span>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+</div>
+</div><!-- /calendario-scroll -->
+{% endblock %}

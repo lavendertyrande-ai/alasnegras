@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% set banner = "img/agenda.png" %}
+{% set title = "Agendas de apoyo" %}
+
+{% block content %}
+<h1>Agendas de apoyo</h1>
+<p>Reserva tus horas de apoyo. Máximo 3 horas semanales, máximo 2 por día.</p>
+
+<span class="scroll-hint">👉 Desliza para ver todos los días</span>
+
+<div class="agenda-scroll">
+<div class="agenda-semanal">
+
+    <!-- Encabezado de días -->
+    <div class="agenda-fila encabezado">
+        <div class="agenda-hora-col"></div>
+        {% for dia in ["Lun","Mar","Mié","Jue","Vie","Sáb"] %}
+            <div class="agenda-dia-col">{{ dia }}</div>
+        {% endfor %}
+    </div>
+
+    <!-- Filas por hora -->
+    {% for hora in range(15, 24) %}
+    <div class="agenda-fila">
+
+        <div class="agenda-hora-col">{{ "%02d:00" % hora }}</div>
+
+        {% for dia in range(0, 6) %}
+            {% set slot = slots.get((dia, hora)) %}
+
+            {% if not slot %}
+                <div class="agenda-celda slot-libre"></div>
+
+            {% else %}
+                {% set num_reservas = slot.reservas|length %}
+                {% set ya_reservado = namespace(val=false) %}
+                {% for r in slot.reservas %}
+                    {% if r.usuario_id == current_user_id %}
+                        {% set ya_reservado.val = true %}
+                    {% endif %}
+                {% endfor %}
+
+                {% if num_reservas >= 2 %}
+                <div class="agenda-celda slot-completo">
+                    {% for r in slot.reservas %}
+                        <div class="reserva-id">
+                            {{ r.usuario.display_name or r.usuario.login }}
+                            {% if r.usuario_id == current_user_id %}
+                                <a href="{{ url_for('cancelar_reserva', reserva_id=r.id) }}" class="btn-cancelar-x">✕</a>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% elif num_reservas == 1 %}
+                <div class="agenda-celda slot-parcial">
+                    {% for r in slot.reservas %}
+                        <div class="reserva-id">
+                            {{ r.usuario.display_name or r.usuario.login }}
+                            {% if r.usuario_id == current_user_id %}
+                                <a href="{{ url_for('cancelar_reserva', reserva_id=r.id) }}" class="btn-cancelar-x">✕</a>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    {% if not ya_reservado.val %}
+                        <a href="{{ url_for('reservar_slot', slot_id=slot.id) }}" class="btn-reservar">Reservar</a>
+                    {% endif %}
+                </div>
+
+                {% else %}
+                <div class="agenda-celda slot-libre">
+                    <a href="{{ url_for('reservar_slot', slot_id=slot.id) }}" class="btn-reservar">Reservar</a>
+                </div>
+                {% endif %}
+            {% endif %}
+
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+</div>
+</div><!-- /agenda-scroll -->
+{% endblock %}

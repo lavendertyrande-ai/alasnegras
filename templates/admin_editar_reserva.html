@@ -1,0 +1,35 @@
+{% extends "admin_base.html" %}
+{% block admin_title %}Editar reserva{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-header">
+    <div>
+        <h1>Editar reserva</h1>
+        <p class="admin-intro">Cambia el usuario o el hueco horario.</p>
+    </div>
+    <a href="{{ url_for('admin_agendas_calendario') }}" class="admin-btn admin-btn-secondary">← Volver a agendas</a>
+</div>
+
+<form method="POST" class="admin-card" style="max-width: 600px;">
+    <label>Usuario</label>
+    <select name="usuario_id" required>
+        {% for u in usuarios %}
+            <option value="{{ u.id }}" {% if u.id == reserva.usuario_id %}selected{% endif %}>
+                {{ u.display_name or u.twitch_id }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label>Slot</label>
+    <select name="slot_id" required>
+        {% for s in slots %}
+            {% set dias = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"] %}
+            <option value="{{ s.id }}" {% if s.id == reserva.slot_id %}selected{% endif %}>
+                {{ dias[s.dia_semana] }} · {{ "%02d:%02d"|format(s.hora_inicio.hour, s.hora_inicio.minute) }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit" class="admin-btn" style="margin-top:20px;">Guardar cambios</button>
+</form>
+{% endblock %}

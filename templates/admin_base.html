@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block admin_title %}Administración{% endblock %} · Alas Negras</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chicle&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+
+    <style>
+        /* Layout solo admin */
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .admin-sidebar {
+            width: 260px;
+            flex-shrink: 0;
+            background: rgba(0, 0, 0, 0.75);
+            border-right: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .admin-sidebar-brand {
+            font-family: "Chicle", serif;
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 8px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .admin-sidebar-brand small {
+            display: block;
+            font-family: "Poppins", sans-serif;
+            font-size: 0.75rem;
+            opacity: 0.65;
+            font-weight: 400;
+            margin-top: 4px;
+        }
+
+        .admin-nav-link {
+            display: block;
+            padding: 10px 14px;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+
+        .admin-nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffb3b3;
+        }
+
+        .admin-nav-link.active {
+            background: rgba(145, 70, 255, 0.35);
+            border: 1px solid rgba(145, 70, 255, 0.5);
+        }
+
+        .admin-nav-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.12);
+            margin: 12px 0;
+        }
+
+        .admin-nav-link.danger {
+            color: #ff8a8a;
+        }
+
+        .admin-nav-link.danger:hover {
+            background: rgba(255, 77, 77, 0.2);
+        }
+
+        .admin-main {
+            flex: 1;
+            padding: 28px 32px 48px;
+            overflow-x: auto;
+        }
+
+        .admin-main h1 {
+            text-align: left;
+            margin-top: 0;
+        }
+
+        .admin-main .admin-intro {
+            text-align: left;
+            opacity: 0.85;
+            margin-bottom: 24px;
+        }
+
+        .admin-flash-container {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .admin-flash {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .admin-flash-success {
+            background: rgba(46, 204, 113, 0.25);
+            border: 1px solid rgba(46, 204, 113, 0.5);
+        }
+
+        .admin-flash-error {
+            background: rgba(231, 76, 60, 0.25);
+            border: 1px solid rgba(231, 76, 60, 0.5);
+        }
+
+        .admin-page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .admin-card {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: left;
+        }
+
+        .admin-card label {
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .admin-card input,
+        .admin-card select,
+        .admin-card textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: #222;
+            color: #fff;
+        }
+
+        .admin-btn {
+            display: inline-block;
+            padding: 10px 16px;
+            background: #9146FF;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .admin-btn:hover {
+            background: #772ce8;
+        }
+
+        .admin-btn-secondary {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .admin-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .admin-btn-danger {
+            background: #c0392b;
+        }
+
+        .admin-btn-danger:hover {
+            background: #a93226;
+        }
+
+        .admin-btn-sm {
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 900px) {
+            .admin-layout {
+                flex-direction: column;
+            }
+
+            .admin-sidebar {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+                padding: 16px;
+            }
+
+            .admin-sidebar-brand {
+                width: 100%;
+            }
+        }
+    </style>
+
+    {% block admin_head %}{% endblock %}
+</head>
+<body>
+
+<div class="admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+        <div class="admin-sidebar-brand">
+            Alas Negras
+            <small>Panel de administración</small>
+        </div>
+
+        <a href="{{ url_for('admin_panel') }}"
+           class="admin-nav-link {% if request.endpoint == 'admin_panel' %}active{% endif %}">
+            🏠 Inicio admin
+        </a>
+
+        <a href="{{ url_for('admin_agendas_calendario') }}"
+           class="admin-nav-link {% if request.endpoint in ['admin_agendas_calendario', 'admin_editar_reserva'] %}active{% endif %}">
+            📅 Agendas
+        </a>
+
+        <a href="{{ url_for('admin_eventos') }}"
+           class="admin-nav-link {% if request.endpoint in ['admin_eventos', 'editar_evento', 'actualizar_evento'] %}active{% endif %}">
+            🎭 Eventos
+        </a>
+
+        <a href="{{ url_for('admin_generar_slots') }}"
+           class="admin-nav-link {% if request.endpoint == 'admin_generar_slots' %}active{% endif %}">
+            ⚙️ Regenerar slots
+        </a>
+
+        <div class="admin-nav-divider"></div>
+
+        <a href="{{ url_for('index') }}" class="admin-nav-link">
+            🌐 Ver web pública
+        </a>
+
+        <a href="{{ url_for('admin_logout') }}" class="admin-nav-link danger">
+            🚪 Cerrar sesión admin
+        </a>
+    </aside>
+
+    <!-- Contenido -->
+    <main class="admin-main">
+
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+            {% if mensajes %}
+                <div class="admin-flash-container">
+                    {% for categoria, mensaje in mensajes %}
+                        <div class="admin-flash admin-flash-{{ categoria }}">{{ mensaje }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block admin_content %}{% endblock %}
+    </main>
+
+</div>
+
+{% block admin_scripts %}{% endblock %}
+
+</body>
+</html>

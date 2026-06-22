@@ -1,0 +1,46 @@
+{% extends "admin_base.html" %}
+{% block admin_title %}Editar evento{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-header">
+    <div>
+        <h1>Editar evento</h1>
+    </div>
+    <a href="{{ url_for('admin_eventos') }}" class="admin-btn admin-btn-secondary">← Volver a eventos</a>
+</div>
+
+<form action="{{ url_for('actualizar_evento', id=evento.id) }}" method="POST" class="admin-card" style="max-width: 900px;">
+    <label>Título</label>
+    <input type="text" name="titulo" value="{{ evento.titulo }}" required>
+
+    <label>Inicio</label>
+    <input type="datetime-local" name="inicio"
+           value="{{ evento.fecha_inicio.strftime('%Y-%m-%dT%H:%M') }}" required>
+
+    <label>Fin</label>
+    <input type="datetime-local" name="fin"
+           value="{{ evento.fecha_fin.strftime('%Y-%m-%dT%H:%M') }}" required>
+
+    <label>URL Twitch</label>
+    <input type="text" name="url" value="{{ evento.url_twitch or '' }}">
+
+    <label>Contenido</label>
+    <textarea id="contenido_evento" name="contenido">{{ evento.contenido|safe }}</textarea>
+
+    <button type="submit" class="admin-btn" style="margin-top:20px;">Guardar cambios</button>
+</form>
+{% endblock %}
+
+{% block admin_scripts %}
+<script src="{{ url_for('static', filename='tinymce/tinymce.min.js') }}"></script>
+<script>
+tinymce.init({
+    selector: '#contenido_evento',
+    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+    height: 450,
+    menubar: false,
+    branding: false
+});
+</script>
+{% endblock %}

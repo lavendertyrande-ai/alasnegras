@@ -1,0 +1,44 @@
+{% extends "admin_base.html" %}
+{% block admin_title %}Eventos{% endblock %}
+
+{% block admin_content %}
+<h1>Administración de eventos</h1>
+<p class="admin-intro">Crea y gestiona eventos especiales de la comunidad.</p>
+
+<form method="POST" class="admin-card" style="max-width: 600px; margin-bottom: 40px;">
+    <label>Título</label>
+    <input type="text" name="titulo" required>
+
+    <label>Inicio</label>
+    <input type="datetime-local" name="inicio" required>
+
+    <label>Fin</label>
+    <input type="datetime-local" name="fin" required>
+
+    <label>URL Twitch (opcional)</label>
+    <input type="text" name="url">
+
+    <label>Contenido</label>
+    <textarea name="contenido" rows="5"></textarea>
+
+    <button type="submit" class="admin-btn" style="margin-top:15px;">Guardar evento</button>
+</form>
+
+<h2>Eventos existentes</h2>
+
+<div class="eventos-grid">
+    {% for e in eventos %}
+        <div class="evento-card">
+            <h3>{{ e.titulo }}</h3>
+            <p>{{ e.fecha_inicio }} → {{ e.fecha_fin }}</p>
+            <a href="{{ url_for('editar_evento', id=e.id) }}" class="admin-btn admin-btn-sm">Editar</a>
+            <a href="{{ url_for('eliminar_evento', id=e.id) }}"
+               class="admin-btn admin-btn-sm admin-btn-danger"
+               style="margin-left:8px;"
+               onclick="return confirm('¿Eliminar este evento?');">Eliminar</a>
+        </div>
+    {% else %}
+        <p>No hay eventos todavía.</p>
+    {% endfor %}
+</div>
+{% endblock %}

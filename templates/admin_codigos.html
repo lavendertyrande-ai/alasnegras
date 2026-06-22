@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% set title = "Admin — Códigos de acceso" %}
+
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <h1 style="margin:0;">🔑 Códigos de acceso</h1>
+    <a href="{{ url_for('admin_agendas_calendario') }}" class="btn-admin-accion">← Volver</a>
+</div>
+
+{% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}{% for cat, msg in msgs %}
+        <div class="flash flash-{{ cat }}">{{ msg }}</div>
+    {% endfor %}{% endif %}
+{% endwith %}
+
+<!-- Crear nuevo código -->
+<div class="admin-search-panel" style="max-width:500px;">
+    <h2 style="margin-top:0; font-size:1rem; opacity:0.8;">Crear nuevo código</h2>
+    <form method="POST" action="{{ url_for('admin_codigos') }}" style="display:flex; gap:10px; flex-wrap:wrap;">
+        <input type="hidden" name="action" value="create">
+        <input type="text" name="nombre" placeholder="Nombre (ej: Admin2)"
+               required class="admin-input" style="flex:1; min-width:120px;">
+        <input type="text" name="codigo" placeholder="Código secreto"
+               required class="admin-input" style="flex:2; min-width:180px;">
+        <button type="submit" class="btn-admin-accion">Crear</button>
+    </form>
+</div>
+
+<!-- Listado -->
+<div style="margin-top:30px;">
+    <h2 style="font-size:1rem; opacity:0.8; margin-bottom:12px;">Códigos existentes</h2>
+    <div class="codigos-tabla-wrap"><table class="codigos-tabla">
+        <thead>
+            <tr style="background:rgba(255,255,255,0.08); text-align:left;">
+                <th>Nombre</th>
+                <th>Código</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for c in codigos %}
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+                <td>{{ c.nombre }}</td>
+                <td>{{ c.codigo }}</td>
+                <td>
+                    {% if c.activo %}
+                        <span style="color:#4caf50; font-weight:700;">✅ Activo</span>
+                    {% else %}
+                        <span style="color:#f44336; font-weight:700;">❌ Desactivado</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <!-- Toggle activo/inactivo -->
+                    <form method="POST" action="{{ url_for('admin_codigos') }}">
+                        <input type="hidden" name="action"  value="toggle">
+                        <input type="hidden" name="code_id" value="{{ c.id }}">
+                        <button type="submit" class="btn-admin-accion" style="padding:4px 10px; font-size:0.8rem; background:#555;">
+                            {{ "Desactivar" if c.activo else "Activar" }}
+                        </button>
+                    </form>
+                    <!-- Eliminar -->
+                    <form method="POST" action="{{ url_for('admin_codigos') }}"
+                          onsubmit="return confirm('¿Eliminar este código?')">
+                        <input type="hidden" name="action"  value="delete">
+                        <input type="hidden" name="code_id" value="{{ c.id }}">
+                        <button type="submit" class="btn-admin-accion" style="padding:4px 10px; font-size:0.8rem; background:#8b1a1a;">
+                            Eliminar
+                        </button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table></div>
+</div>
+
+{% endblock %}

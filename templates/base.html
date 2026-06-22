@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title if title else "Alas Negras Community" }}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chicle&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin_extra.css') }}">
+</head>
+<body>
+
+    <!-- BANNER -->
+    {% if banner %}
+    <div class="banner">
+        <img src="{{ url_for('static', filename=banner) }}" alt="Banner" class="banner-img">
+    </div>
+    {% endif %}
+
+    <!-- TOPBAR -->
+    <header class="topbar" style="position:relative;">
+        <div class="topbar-inner">
+            <span class="brand">Alas Negras Community</span>
+
+            <!-- Botón hamburguesa (solo móvil) -->
+            <button class="nav-toggle" aria-expanded="false" aria-controls="main-nav" aria-label="Abrir menú">
+                <span></span><span></span><span></span>
+            </button>
+
+            <!-- Menú principal -->
+            <nav class="nav" id="main-nav">
+                <a href="{{ url_for('index') }}">Inicio</a>
+                <a href="{{ url_for('calendario') }}">Calendario</a>
+                <a href="{{ url_for('agendas') }}">Agendas</a>
+                <a href="{{ url_for('emitiendo') }}">En directo</a>
+                <a href="{{ url_for('eventos') }}">Eventos</a>
+
+                {% if session.get('display_name') %}
+
+                    <div class="user-dropdown" onclick="this.classList.toggle('open')">
+                        <div class="user-btn">
+                            <img src="{{ session.avatar }}" class="avatar" alt="Avatar">
+                            <span>{{ session.display_name }}</span>
+                        </div>
+                        <div class="user-menu">
+                            <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+                        </div>
+                    </div>
+
+                    {% if session.get('es_admin') and not session.get('modo_admin') %}
+                        <a href="{{ url_for('admin_login') }}" class="admin-link">⚙️ Admin</a>
+                    {% endif %}
+
+                    {% if session.get('modo_admin') %}
+                        <a href="{{ url_for('admin_agendas_calendario') }}" class="admin-link">⚙️ Panel</a>
+                        <a href="{{ url_for('admin_logout') }}" class="admin-link" style="background:rgba(139,26,26,0.4);">← Salir admin</a>
+                    {% endif %}
+
+                {% else %}
+                    <a href="{{ url_for('login_twitch') }}" class="btn-login">Login con Twitch</a>
+                    <a href="{{ url_for('admin_codigo') }}" class="admin-link" title="Administración">⚙️</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <!-- CONTENIDO -->
+    <main class="contenido">
+        {% block content %}{% endblock %}
+
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+            {% if mensajes %}
+                <div class="flash-container">
+                    {% for categoria, mensaje in mensajes %}
+                        <div class="flash flash-{{ categoria }}">{{ mensaje }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        © 2026 Alas Negras Community · Todos los derechos reservados
+    </footer>
+
+    <!-- Script hamburguesa -->
+    <script>
+    (function() {
+        var btn = document.querySelector('.nav-toggle');
+        var nav = document.getElementById('main-nav');
+        if (!btn || !nav) return;
+        btn.addEventListener('click', function() {
+            var open = nav.classList.toggle('open');
+            btn.setAttribute('aria-expanded', open);
+        });
+        // Cerrar al hacer clic en un link (móvil)
+        nav.querySelectorAll('a').forEach(function(a) {
+            a.addEventListener('click', function() {
+                if (window.innerWidth < 768) {
+                    nav.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                }
+            });
+        });
+    })();
+    </script>
+
+    {% block scripts %}{% endblock %}
+
+</body>
+</html>

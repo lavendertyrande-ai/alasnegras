@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Acceso administrador · Alas Negras</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Chicle&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .login-wrap {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+        }
+        .login-wrap h1 {
+            font-family: "Chicle", serif;
+            text-align: center;
+        }
+        .login-card {
+            background: rgba(0,0,0,0.55);
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.15);
+            text-align: left;
+        }
+        .login-card label {
+            display: block;
+            margin: 12px 0 6px;
+        }
+        .login-card input[type="text"],
+        .login-card input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: #222;
+            color: #fff;
+            box-sizing: border-box;
+        }
+        .password-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .password-row input {
+            flex: 1;
+        }
+        .btn-toggle-password {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+            transition: 0.2s;
+        }
+        .btn-toggle-password:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .login-card button[type="submit"] {
+            width: 100%;
+            margin-top: 20px;
+            padding: 10px;
+            background: #9146FF;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .login-card button[type="submit"]:hover {
+            background: #772ce8;
+        }
+        .login-back {
+            display: block;
+            text-align: center;
+            margin-top: 16px;
+            color: #fff;
+        }
+        .login-flash-error {
+            color: #ff8a8a;
+            text-align: center;
+        }
+        .login-flash-success {
+            color: #8f8;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-wrap">
+    <h1>Panel de administración</h1>
+    <p style="text-align:center; opacity:0.85;">Introduce tus credenciales.</p>
+
+    {% with mensajes = get_flashed_messages(with_categories=true) %}
+        {% if mensajes %}
+            {% for categoria, mensaje in mensajes %}
+                <p class="login-flash-{{ categoria }}">{{ mensaje }}</p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('admin_login') }}" class="login-card">
+        <label for="usuario">Usuario</label>
+        <input type="text" id="usuario" name="usuario" required autocomplete="username">
+
+        <label for="password">Contraseña</label>
+        <div class="password-row">
+            <input type="password" id="password" name="password" required autocomplete="current-password">
+            <button type="button" class="btn-toggle-password" onclick="togglePassword()" title="Mostrar u ocultar contraseña" aria-label="Mostrar u ocultar contraseña">
+                👁
+            </button>
+        </div>
+
+        <button type="submit">Entrar al panel</button>
+    </form>
+
+    <a href="{{ url_for('index') }}" class="login-back">← Volver al inicio</a>
+</div>
+
+<script>
+function togglePassword() {
+    const input = document.getElementById("password");
+    const btn = document.querySelector(".btn-toggle-password");
+
+    if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "🙈";
+        btn.title = "Ocultar contraseña";
+    } else {
+        input.type = "password";
+        btn.textContent = "👁";
+        btn.title = "Mostrar contraseña";
+    }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% set banner = "img/eventos.png" %}
+{% set title = "Eventos de la comunidad" %}
+
+{% block content %}
+
+<div class="eventos-header" style="position: relative;">
+
+    {% if session.get('es_admin') and session.get('modo_admin') %}
+        <a href="{{ url_for('admin_eventos') }}" class="btn-admin-eventos">Admin</a>
+    {% endif %}
+
+    <h1>Eventos de la comunidad</h1>
+    <p>Aquí puedes ver los eventos especiales creados por la administración.</p>
+</div>
+
+<div class="grid">
+    {% if eventos %}
+        {% for e in eventos %}
+            <div class="card">
+                <h2>{{ e.titulo }}</h2>
+
+                <p><strong>Inicio:</strong> {{ e.fecha_inicio.strftime("%d/%m/%Y %H:%M") }}</p>
+                <p><strong>Fin:</strong> {{ e.fecha_fin.strftime("%d/%m/%Y %H:%M") }}</p>
+
+                {% if e.url_twitch %}
+                    <a href="{{ e.url_twitch }}" target="_blank" class="btn">Ver directo</a>
+                {% endif %}
+
+                {% if e.contenido %}
+                <div class="evento-contenido">
+                    {{ e.contenido|safe }}
+                </div>
+                {% endif %}
+
+                {% if session.get('es_admin') and session.get('modo_admin') %}
+                <div class="admin-controls">
+                    <a href="{{ url_for('editar_evento', id=e.id) }}" class="btn-editar">Editar</a>
+                    <a href="{{ url_for('eliminar_evento', id=e.id) }}" class="btn-eliminar">Eliminar</a>
+                </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No hay eventos programados en este momento.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

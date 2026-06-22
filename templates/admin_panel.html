@@ -1,0 +1,23 @@
+{% extends "admin_base.html" %}
+{% block admin_title %}Inicio{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-header">
+    <div>
+        <h1>Panel de administración</h1>
+        <p class="admin-intro">Gestiona agendas, eventos y slots de apoyo.</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+    <a href="{{ url_for('admin_agendas_calendario') }}" class="admin-card admin-btn" style="text-align:center;">
+        📅 Gestionar agendas
+    </a>
+    <a href="{{ url_for('admin_eventos') }}" class="admin-card admin-btn" style="text-align:center;">
+        🎭 Gestionar eventos
+    </a>
+    <a href="{{ url_for('admin_generar_slots') }}" class="admin-card admin-btn admin-btn-secondary" style="text-align:center;">
+        ⚙️ Regenerar slots
+    </a>
+</div>
+{% endblock %}

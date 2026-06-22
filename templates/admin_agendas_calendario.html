@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% set banner = "img/agenda.png" %}
+{% set title = "Admin — Agendas" %}
+
+{% block content %}
+
+<div class="admin-page-header">
+    <h1>Panel de Agendas</h1>
+    <div class="admin-btns">
+        <a href="{{ url_for('admin_generar_slots') }}" class="btn-admin-accion" style="background:#2a7a2a;">
+            ⚙️ Generar slots
+        </a>
+        <a href="{{ url_for('admin_codigos') }}" class="btn-admin-accion" style="background:#555;">
+            🔑 Códigos admin
+        </a>
+        <a href="{{ url_for('admin_logout') }}" class="btn-admin-accion" style="background:#8b1a1a;">
+            ← Salir admin
+        </a>
+    </div>
+</div>
+
+{% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}
+        {% for cat, msg in msgs %}
+            <div class="flash flash-{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- ═══════════════════════════════════════════════════
+     PANEL DE BÚSQUEDA RÁPIDA — AÑADIR USUARIO
+     ═══════════════════════════════════════════════════ -->
+<div class="admin-search-panel">
+    <h2 style="margin-top:0; font-size:1.1rem; opacity:0.8;">
+        ➕ Añadir reserva por canal de Twitch
+    </h2>
+    <form method="POST" action="{{ url_for('admin_agendas_calendario') }}" class="admin-add-form">
+        <input type="hidden" name="action" value="add">
+
+        <input
+            type="text"
+            name="twitch_login"
+            placeholder="Nombre del canal (ej: patry_gamer)"
+            required
+            class="admin-input"
+        >
+
+        <select name="slot_id" required class="admin-select">
+            <option value="">— Selecciona día y hora —</option>
+            {% set dias = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"] %}
+            {% for s in all_slots %}
+                <option value="{{ s.id }}">
+                    {{ dias[s.dia_semana] }} {{ "%02d:00" % s.hora_inicio.hour }}–{{ "%02d:00" % s.hora_fin.hour }}
+                    ({{ s.reservas|length }}/2 ocupado)
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn-admin-accion">Añadir reserva</button>
+    </form>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     CALENDARIO ADMIN
+     ═══════════════════════════════════════════════════ -->
+<div class="calendario-admin-wrap">
+<div class="calendario-admin">
+
+    <!-- Cabecera días -->
+    <div class="ca-hora"></div>
+    {% for dia in ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"] %}
+        <div class="ca-dia-header">{{ dia }}</div>
+    {% endfor %}
+
+    <!-- Filas por hora -->
+    {% for hora in range(15, 24) %}
+
+        <div class="ca-hora">{{ "%02d:00" % hora }}</div>
+
+        {% for dia in range(0, 6) %}
+            {% set slot = slots.get((dia, hora)) %}
+            <div class="ca-celda">
+
+                <!-- Reservas existentes -->
+                {% if slot %}
+                    {% for r in slot.reservas %}
+                    <div class="ca-reserva">
+
+                        <!-- Avatar mini -->
+                        {% if r.usuario.avatar_url %}
+                            <img src="{{ r.usuario.avatar_url }}" class="ca-avatar">
+                        {% else %}
+                            <div class="ca-avatar-placeholder">{{ r.usuario.display_name[0] }}</div>
+                        {% endif %}
+
+                        <span class="ca-nombre">{{ r.usuario.display_name or r.usuario.login }}</span>
+
+                        <div class="ca-acciones">
+                            <!-- Mover a otro slot -->
+                            <button class="btn-mover" title="Mover reserva"
+                                onclick="abrirMover({{ r.id }}, '{{ r.usuario.display_name }}')">
+                                ↕
+                            </button>
+                            <!-- Eliminar -->
+                            <a href="{{ url_for('admin_eliminar_reserva', reserva_id=r.id) }}"
+                               class="btn-eliminar-x"
+                               onclick="return confirm('¿Eliminar reserva de {{ r.usuario.display_name }}?')">
+                                ✕
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+
+                <!-- Indicador de capacidad -->
+                {% if slot %}
+                    {% set n = slot.reservas|length %}
+                    {% if n < 2 %}
+                        <div class="ca-libre">
+                            {{ n }}/2
+                            <!-- Formulario rápido de añadir directamente en celda -->
+                            <form method="POST" action="{{ url_for('admin_agendas_calendario') }}"
+                                  class="ca-mini-form">
+                                <input type="hidden" name="action"  value="add">
+                                <input type="hidden" name="slot_id" value="{{ slot.id }}">
+                                <input type="text" name="twitch_login"
+                                       placeholder="canal..." class="ca-mini-input">
+                                <button type="submit" class="ca-mini-btn">+</button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <div class="ca-completo">LLENO</div>
+                    {% endif %}
+                {% else %}
+                    <div style="color:rgba(255,255,255,0.2); font-size:0.7rem;">sin slot</div>
+                {% endif %}
+
+            </div>
+        {% endfor %}
+
+    {% endfor %}
+
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     MODAL MOVER RESERVA
+     ═══════════════════════════════════════════════════ -->
+<div id="modal-mover" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7);
+     z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:#1a1a2e; border:1px solid rgba(255,255,255,0.2); border-radius:12px;
+                padding:30px; min-width:320px; max-width:90vw;">
+        <h2 style="margin-top:0;" id="modal-titulo">Mover reserva</h2>
+        <form method="POST" action="{{ url_for('admin_agendas_calendario') }}">
+            <input type="hidden" name="action" value="move">
+            <input type="hidden" name="reserva_id" id="modal-reserva-id">
+
+            <label style="display:block; margin-bottom:8px; opacity:0.8;">Nuevo slot:</label>
+            <select name="nuevo_slot_id" required class="admin-select" style="width:100%; margin-bottom:20px;">
+                {% set dias = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"] %}
+                {% for s in all_slots %}
+                    <option value="{{ s.id }}">
+                        {{ dias[s.dia_semana] }} {{ "%02d:00" % s.hora_inicio.hour }}
+                        ({{ s.reservas|length }}/2)
+                    </option>
+                {% endfor %}
+            </select>
+
+            <div style="display:flex; gap:10px;">
+                <button type="submit" class="btn-admin-accion">Mover</button>
+                <button type="button" class="btn-admin-accion" style="background:#555;"
+                        onclick="cerrarMover()">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function abrirMover(reservaId, nombre) {
+    document.getElementById('modal-reserva-id').value = reservaId;
+    document.getElementById('modal-titulo').textContent = `Mover reserva de ${nombre}`;
+    document.getElementById('modal-mover').style.display = 'flex';
+}
+function cerrarMover() {
+    document.getElementById('modal-mover').style.display = 'none';
+}
+// Cerrar modal al hacer clic fuera
+document.getElementById('modal-mover').addEventListener('click', function(e) {
+    if (e.target === this) cerrarMover();
+});
+</script>
+{% endblock %}

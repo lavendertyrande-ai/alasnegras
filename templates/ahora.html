@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% set banner = "img/ahora_en_directo.png" %}
+{% set title = "En directo ahora" %}
+
+{% block content %}
+<h1>Directos en vivo</h1>
+<p>Aquí aparecerán los canales que están en directo en este momento.</p>
+
+<div class="grid">
+    {% if directos %}
+        {% for d in directos %}
+            <div class="card">
+                <h2>{{ d.titulo }}</h2>
+
+                <p><strong>Streamer:</strong> {{ d.streamer.display_name or d.streamer.twitch_id }}</p>
+
+                <a href="{{ d.url_twitch }}" target="_blank" class="btn">Ver directo</a>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No hay directos en vivo ahora mismo.</p>
+    {% endif %}
+</div>
+{% endblock %}

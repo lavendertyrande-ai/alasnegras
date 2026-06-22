@@ -1,0 +1,212 @@
+/* =========================================================
+   ADMIN EXTRA — mobile-first
+   ========================================================= */
+
+/* Panel de búsqueda / añadir */
+.admin-search-panel {
+    background: rgba(0,0,0,0.45);
+    border: 1px solid rgba(145,70,255,0.35);
+    border-radius: 12px;
+    padding: 18px 16px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(6px);
+}
+.admin-search-panel h2 {
+    margin-top: 0; font-size: 1rem; opacity: 0.85;
+}
+
+.admin-add-form {
+    display: flex; flex-direction: column;
+    gap: 10px;
+}
+@media (min-width: 600px) {
+    .admin-add-form { flex-direction: row; flex-wrap: wrap; align-items: center; }
+}
+
+.admin-input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.07);
+    color: white; font-size: 0.95rem;
+}
+.admin-input::placeholder { color: rgba(255,255,255,0.4); }
+.admin-input:focus { outline: none; border-color: #9146FF; background: rgba(145,70,255,0.1); }
+
+@media (min-width: 600px) {
+    .admin-input { flex: 1; min-width: 160px; width: auto; }
+}
+
+.admin-select {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: #1a1a2e; color: white; font-size: 0.9rem;
+}
+.admin-select:focus { outline: none; border-color: #9146FF; }
+
+@media (min-width: 600px) {
+    .admin-select { flex: 1; min-width: 180px; width: auto; }
+}
+
+/* Botones acción admin */
+.btn-admin-accion {
+    display: inline-block;
+    width: 100%;
+    padding: 11px 16px;
+    background: #9146FF; color: white;
+    border: none; border-radius: 7px;
+    font-weight: 700; font-size: 0.9rem;
+    cursor: pointer; text-decoration: none;
+    text-align: center; transition: 0.2s;
+    white-space: nowrap;
+}
+.btn-admin-accion:hover { filter: brightness(1.15); }
+
+@media (min-width: 600px) {
+    .btn-admin-accion { width: auto; }
+}
+
+/* Cabecera de pantalla admin */
+.admin-page-header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.admin-page-header h1 { margin: 0; }
+.admin-page-header .admin-btns {
+    display: flex; flex-wrap: wrap; gap: 8px;
+}
+@media (min-width: 600px) {
+    .admin-page-header { flex-direction: row; justify-content: space-between; align-items: center; }
+}
+
+/* ─── Calendario admin ─── */
+.calendario-admin-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 10px;
+    border-radius: 8px;
+}
+
+.calendario-admin {
+    display: grid;
+    grid-template-columns: 54px repeat(6, minmax(110px, 1fr));
+    gap: 3px;
+    min-width: 730px;
+}
+
+.ca-hora {
+    background: rgba(255,235,59,0.85); color: #000;
+    font-weight: 700; font-size: 0.75rem;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 5px; padding: 5px 3px;
+}
+
+.ca-dia-header {
+    background: rgba(212,160,23,0.85); color: #000;
+    font-weight: 700; font-size: 0.8rem;
+    text-align: center; padding: 7px 3px;
+    border-radius: 5px;
+}
+
+.ca-celda {
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 5px; padding: 5px;
+    min-height: 68px;
+    display: flex; flex-direction: column; gap: 3px;
+}
+
+.ca-reserva {
+    background: rgba(145,70,255,0.25);
+    border: 1px solid rgba(145,70,255,0.5);
+    border-radius: 4px; padding: 3px 5px;
+    display: flex; align-items: center; gap: 4px;
+    font-size: 0.76rem;
+}
+
+.ca-avatar {
+    width: 20px; height: 20px; border-radius: 50%;
+    flex-shrink: 0; border: 1px solid rgba(255,255,255,0.3);
+}
+.ca-avatar-placeholder {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #9146FF; display: flex; align-items: center;
+    justify-content: center; font-size: 0.65rem;
+    font-weight: 700; flex-shrink: 0;
+}
+
+.ca-nombre {
+    flex: 1; font-weight: 600;
+    white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis; max-width: 60px;
+}
+
+.ca-acciones { display: flex; gap: 3px; flex-shrink: 0; }
+
+.btn-mover {
+    background: rgba(255,255,255,0.15); color: white;
+    border: none; border-radius: 3px;
+    padding: 2px 5px; cursor: pointer; font-size: 0.78rem;
+    transition: 0.15s; min-height: 28px;
+}
+.btn-mover:hover { background: rgba(255,255,255,0.3); }
+
+.btn-eliminar-x {
+    background: rgba(255,77,77,0.7); color: white;
+    border-radius: 3px; padding: 2px 5px;
+    font-size: 0.72rem; font-weight: 700;
+    text-decoration: none; transition: 0.15s;
+    min-height: 28px; display: flex; align-items: center;
+}
+.btn-eliminar-x:hover { background: #cc0000; }
+
+.ca-libre {
+    font-size: 0.68rem; color: rgba(255,255,255,0.4);
+    margin-top: auto;
+}
+.ca-completo {
+    font-size: 0.65rem; color: #ff4d4d;
+    font-weight: 700; margin-top: auto; text-align: center;
+}
+
+.ca-mini-form { display: flex; gap: 3px; margin-top: 3px; }
+.ca-mini-input {
+    flex: 1; padding: 3px 5px; border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.07); color: white;
+    font-size: 0.68rem; min-width: 0;
+}
+.ca-mini-input::placeholder { color: rgba(255,255,255,0.35); }
+.ca-mini-btn {
+    background: #9146FF; color: white; border: none;
+    border-radius: 3px; padding: 2px 7px;
+    font-weight: 700; cursor: pointer; font-size: 0.82rem;
+}
+.ca-mini-btn:hover { background: #772ce8; }
+
+/* ─── Flash messages ─── */
+.flash {
+    padding: 10px 16px; border-radius: 8px;
+    margin-bottom: 12px; font-weight: 600; font-size: 0.92rem;
+}
+.flash-success { background: rgba(76,175,80,0.25); border: 1px solid #4caf50; color: #a5d6a7; }
+.flash-error   { background: rgba(244,67,54,0.25); border: 1px solid #f44336; color: #ef9a9a; }
+
+/* ─── Tabla codigos ─── */
+.codigos-tabla-wrap { overflow-x: auto; }
+.codigos-tabla {
+    width: 100%; border-collapse: collapse;
+    min-width: 480px;
+}
+.codigos-tabla th, .codigos-tabla td {
+    padding: 10px 12px; text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    font-size: 0.9rem;
+}
+.codigos-tabla th { background: rgba(255,255,255,0.08); font-weight: 700; }
+.codigos-tabla td:last-child { display: flex; gap: 8px; flex-wrap: wrap; }

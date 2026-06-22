@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% set banner = "img/ahora_en_directo.png" %}
+{% set title = "En directo ahora" %}
+
+{% block content %}
+<h1>Directos en vivo</h1>
+<p>Aquí aparecerán los canales que están en directo en este momento.</p>
+
+{% if reservas and reservas|length > 0 %}
+    <div class="emitiendo-grid">
+
+        {% for r in reservas %}
+        <div class="emitiendo-card">
+
+            <!-- Imagen (miniatura si está en directo, avatar si no) -->
+            <div class="emitiendo-media">
+                {% if r.thumbnail_url %}
+                    <img src="{{ r.thumbnail_url }}" alt="Directo de {{ r.display_name }}">
+                {% elif r.avatar_url %}
+                    <img src="{{ r.avatar_url }}" alt="Avatar de {{ r.display_name }}">
+                {% else %}
+                    <div class="emitiendo-placeholder">
+                        {{ r.display_name }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Información -->
+            <div class="emitiendo-info">
+                <h2>{{ r.display_name }}</h2>
+
+                <a href="{{ r.channel_url }}" target="_blank" class="btn-ver">
+                    Ir al canal
+                </a>
+
+                {% if r.is_live %}
+                    <div class="emitiendo-live">EN DIRECTO</div>
+                {% else %}
+                    <div class="emitiendo-off">No detectado en directo</div>
+                {% endif %}
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+{% else %}
+    <p>No hay nadie agendado en este momento.</p>
+{% endif %}
+
+{% endblock %}
