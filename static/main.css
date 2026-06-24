@@ -223,7 +223,15 @@ body::before {
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px 0 40px;
+    text-align: center;
 }
+
+h1, h2, h3, p, li, a, span, label {
+    text-shadow:
+        1px 1px 3px rgba(0,0,0,0.9),
+        0 0 8px rgba(0,0,0,0.7);
+}
+
 
 h1 { font-size: clamp(1.6rem, 5vw, 2.8rem); margin-bottom: 10px; }
 h2 { font-size: clamp(1.3rem, 4vw, 2rem); margin-top: 24px; }
