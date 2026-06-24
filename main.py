@@ -193,6 +193,10 @@ def get_or_create_user_by_login(login: str) -> TwitchUser | None:
 
 def generar_slots_agenda_base():
     with app.app_context():
+        ReservaApoyo.query.delete()
+        SlotApoyo.query.delete()
+        db.session.commit()
+
         for dia in range(0, 5):          # lunes–viernes
             for hora in range(15, 24):   # 15:00–23:00
                 inicio = time(hora, 0)
