@@ -1,44 +1,66 @@
-{% extends "admin_base.html" %}
-{% block admin_title %}Eventos{% endblock %}
+{% extends "base.html" %}
+{% set title = "Admin — Eventos" %}
 
-{% block admin_content %}
-<h1>Administración de eventos</h1>
-<p class="admin-intro">Crea y gestiona eventos especiales de la comunidad.</p>
+{% block content %}
 
-<form method="POST" class="admin-card" style="max-width: 600px; margin-bottom: 40px;">
-    <label>Título</label>
-    <input type="text" name="titulo" required>
+<div class="admin-page-header">
+    <h1>📅 Administración de eventos</h1>
+    <div class="admin-btns">
+        <a href="{{ url_for('admin_agendas_calendario') }}" class="btn-admin-accion" style="background:#555;">← Volver al panel</a>
+        <a href="{{ url_for('admin_logout') }}" class="btn-admin-accion" style="background:#8b1a1a;">Salir admin</a>
+    </div>
+</div>
 
-    <label>Inicio</label>
-    <input type="datetime-local" name="inicio" required>
+{% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}{% for cat, msg in msgs %}
+        <div class="flash flash-{{ cat }}">{{ msg }}</div>
+    {% endfor %}{% endif %}
+{% endwith %}
 
-    <label>Fin</label>
-    <input type="datetime-local" name="fin" required>
+<div class="admin-search-panel" style="max-width:700px;">
+    <h2 style="margin-top:0; font-size:1rem; opacity:0.8;">Crear nuevo evento</h2>
+    <form method="POST" action="{{ url_for('admin_eventos') }}" style="display:flex; flex-direction:column; gap:12px;">
+        <input type="text" name="titulo" placeholder="Título del evento" required class="admin-input">
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:200px;">
+                <label style="font-size:0.85rem; opacity:0.7;">Inicio</label>
+                <input type="datetime-local" name="inicio" required class="admin-input" style="width:100%;">
+            </div>
+            <div style="flex:1; min-width:200px;">
+                <label style="font-size:0.85rem; opacity:0.7;">Fin</label>
+                <input type="datetime-local" name="fin" required class="admin-input" style="width:100%;">
+            </div>
+        </div>
+        <input type="text" name="url" placeholder="URL Twitch (opcional)" class="admin-input">
+        <textarea name="contenido" rows="5" placeholder="Descripción del evento..."
+                  class="admin-input" style="resize:vertical;"></textarea>
+        <button type="submit" class="btn-admin-accion" style="width:fit-content;">Guardar evento</button>
+    </form>
+</div>
 
-    <label>URL Twitch (opcional)</label>
-    <input type="text" name="url">
+<h2 style="margin-top:40px;">Eventos existentes</h2>
 
-    <label>Contenido</label>
-    <textarea name="contenido" rows="5"></textarea>
-
-    <button type="submit" class="admin-btn" style="margin-top:15px;">Guardar evento</button>
-</form>
-
-<h2>Eventos existentes</h2>
-
-<div class="eventos-grid">
+<div class="eventos-grid" style="margin-top:16px;">
     {% for e in eventos %}
         <div class="evento-card">
-            <h3>{{ e.titulo }}</h3>
-            <p>{{ e.fecha_inicio }} → {{ e.fecha_fin }}</p>
-            <a href="{{ url_for('editar_evento', id=e.id) }}" class="admin-btn admin-btn-sm">Editar</a>
-            <a href="{{ url_for('eliminar_evento', id=e.id) }}"
-               class="admin-btn admin-btn-sm admin-btn-danger"
-               style="margin-left:8px;"
-               onclick="return confirm('¿Eliminar este evento?');">Eliminar</a>
+            <h3 style="margin-top:0;">{{ e.titulo }}</h3>
+            <p style="font-size:0.85rem; opacity:0.7;">
+                {{ e.fecha_inicio.strftime("%d/%m/%Y %H:%M") }} → {{ e.fecha_fin.strftime("%d/%m/%Y %H:%M") }}
+            </p>
+            {% if e.url_twitch %}
+                <p style="font-size:0.85rem;">🔗 <a href="{{ e.url_twitch }}" target="_blank" style="color:#9146FF;">{{ e.url_twitch }}</a></p>
+            {% endif %}
+            <div style="display:flex; gap:8px; margin-top:10px;">
+                <a href="{{ url_for('editar_evento', id=e.id) }}" class="btn-admin-accion" style="padding:6px 12px; font-size:0.85rem;">Editar</a>
+                <a href="{{ url_for('eliminar_evento', id=e.id) }}"
+                   class="btn-admin-accion"
+                   style="padding:6px 12px; font-size:0.85rem; background:#8b1a1a;"
+                   onclick="return confirm('¿Eliminar este evento?');">Eliminar</a>
+            </div>
         </div>
     {% else %}
         <p>No hay eventos todavía.</p>
     {% endfor %}
 </div>
+
 {% endblock %}
