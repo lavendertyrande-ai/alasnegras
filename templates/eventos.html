@@ -4,46 +4,219 @@
 
 {% block content %}
 
-<div class="eventos-header" style="position: relative;">
-
+<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:20px;">
+    <div>
+        <h1 style="margin-bottom:6px;">Eventos de la comunidad</h1>
+        <p style="margin:0; opacity:0.8;">Aquí puedes ver los eventos especiales de Alas Negras.</p>
+    </div>
     {% if session.get('es_admin') and session.get('modo_admin') %}
-        <a href="{{ url_for('admin_eventos') }}" class="btn-admin-eventos">Admin</a>
+        <a href="{{ url_for('admin_eventos') }}" class="btn-admin-accion">📅 Gestionar eventos</a>
     {% endif %}
-
-    <h1>Eventos de la comunidad</h1>
-    <p>Aquí puedes ver los eventos especiales creados por la administración.</p>
 </div>
 
-<div class="grid">
-    {% if eventos %}
-        {% for e in eventos %}
-            <div class="card">
-                <h2>{{ e.titulo }}</h2>
+{% if eventos %}
+<div class="eventos-cards-grid">
+    {% for e in eventos %}
+    <div class="evento-tarjeta" onclick="abrirEvento({{ e.id }})" style="cursor:pointer;">
 
-                <p><strong>Inicio:</strong> {{ e.fecha_inicio.strftime("%d/%m/%Y %H:%M") }}</p>
-                <p><strong>Fin:</strong> {{ e.fecha_fin.strftime("%d/%m/%Y %H:%M") }}</p>
-
-                {% if e.url_twitch %}
-                    <a href="{{ e.url_twitch }}" target="_blank" class="btn">Ver directo</a>
-                {% endif %}
-
-                {% if e.contenido %}
-                <div class="evento-contenido">
-                    {{ e.contenido|safe }}
-                </div>
-                {% endif %}
-
-                {% if session.get('es_admin') and session.get('modo_admin') %}
-                <div class="admin-controls">
-                    <a href="{{ url_for('editar_evento', id=e.id) }}" class="btn-editar">Editar</a>
-                    <a href="{{ url_for('eliminar_evento', id=e.id) }}" class="btn-eliminar">Eliminar</a>
-                </div>
-                {% endif %}
+        <!-- Imagen del contenido (preview) -->
+        {% if e.contenido and '<img' in e.contenido %}
+            <div class="evento-thumb">
+                {{ e.contenido|safe }}
             </div>
-        {% endfor %}
-    {% else %}
-        <p>No hay eventos programados en este momento.</p>
-    {% endif %}
+        {% else %}
+            <div class="evento-thumb-placeholder">📅</div>
+        {% endif %}
+
+        <div class="evento-tarjeta-info">
+            <h3>{{ e.titulo }}</h3>
+            <p class="evento-fechas">
+                {{ e.fecha_inicio.strftime("%d/%m/%Y %H:%M") }}
+                {% if e.fecha_fin %} → {{ e.fecha_fin.strftime("%d/%m/%Y %H:%M") }}{% endif %}
+            </p>
+            {% if e.url_twitch %}
+                <a href="{{ e.url_twitch }}" target="_blank" class="btn-ver"
+                   onclick="event.stopPropagation()">🎮 Ver directo</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Modal de este evento -->
+    <div id="modal-{{ e.id }}" class="evento-modal" onclick="cerrarEvento({{ e.id }})">
+        <div class="evento-modal-inner" onclick="event.stopPropagation()">
+            <button class="evento-modal-cerrar" onclick="cerrarEvento({{ e.id }})">✕</button>
+            <h2>{{ e.titulo }}</h2>
+            <p class="evento-fechas">
+                {{ e.fecha_inicio.strftime("%d/%m/%Y %H:%M") }}
+                {% if e.fecha_fin %} → {{ e.fecha_fin.strftime("%d/%m/%Y %H:%M") }}{% endif %}
+            </p>
+            {% if e.url_twitch %}
+                <a href="{{ e.url_twitch }}" target="_blank" class="btn-ver">🎮 Ver directo</a>
+            {% endif %}
+            {% if e.contenido %}
+                <div class="evento-modal-contenido">{{ e.contenido|safe }}</div>
+            {% endif %}
+            {% if session.get('es_admin') and session.get('modo_admin') %}
+                <div style="margin-top:20px; display:flex; gap:10px;">
+                    <a href="{{ url_for('editar_evento', id=e.id) }}"
+                       class="btn-admin-accion" style="font-size:0.85rem; padding:6px 12px;">✏️ Editar</a>
+                    <a href="{{ url_for('eliminar_evento', id=e.id) }}"
+                       class="btn-admin-accion"
+                       style="font-size:0.85rem; padding:6px 12px; background:#8b1a1a;"
+                       onclick="return confirm('¿Eliminar?')">🗑️ Eliminar</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
 </div>
 
+{% else %}
+    <p>No hay eventos programados en este momento.</p>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* Grid de tarjetas */
+.eventos-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+    margin-top: 10px;
+}
+
+/* Tarjeta */
+.evento-tarjeta {
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+}
+.evento-tarjeta:hover {
+    transform: translateY(-4px);
+    border-color: #9146FF;
+}
+
+/* Preview imagen */
+.evento-thumb {
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.3);
+}
+.evento-thumb img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+}
+/* Ocultar todo lo que no sea imagen en el thumb */
+.evento-thumb > *:not(img) { display: none; }
+.evento-thumb img ~ * { display: none; }
+
+.evento-thumb-placeholder {
+    width: 100%;
+    height: 180px;
+    background: rgba(145,70,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+}
+
+/* Info debajo de la imagen */
+.evento-tarjeta-info {
+    padding: 14px 16px;
+}
+.evento-tarjeta-info h3 {
+    margin: 0 0 6px;
+    font-size: 1rem;
+    font-weight: 700;
+}
+.evento-fechas {
+    font-size: 0.8rem;
+    opacity: 0.65;
+    margin: 0 0 10px;
+}
+
+/* Modal */
+.evento-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.evento-modal.abierto { display: flex; }
+
+.evento-modal-inner {
+    background: #1a0a0a;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 14px;
+    padding: 30px;
+    max-width: 700px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.evento-modal-cerrar {
+    position: absolute;
+    top: 14px; right: 16px;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: white;
+    font-size: 1.1rem;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.evento-modal-cerrar:hover { background: rgba(255,255,255,0.25); }
+
+.evento-modal-contenido {
+    margin-top: 16px;
+    line-height: 1.7;
+}
+.evento-modal-contenido img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 12px auto;
+    display: block;
+}
+</style>
+
+<script>
+function abrirEvento(id) {
+    document.getElementById('modal-' + id).classList.add('abierto');
+    document.body.style.overflow = 'hidden';
+}
+function cerrarEvento(id) {
+    document.getElementById('modal-' + id).classList.remove('abierto');
+    document.body.style.overflow = '';
+}
+// Cerrar con Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.evento-modal.abierto').forEach(function(m) {
+            m.classList.remove('abierto');
+            document.body.style.overflow = '';
+        });
+    }
+});
+</script>
 {% endblock %}
