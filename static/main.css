@@ -261,13 +261,14 @@ p, li { font-size: 1rem; line-height: 1.65; }
     flex-direction: column;
     gap: 2px;
     min-width: 540px;   /* permite scroll en móvil */
-    max-width: 700px;
+    width: 100%;
+    max-width: 900px;
     margin: 0 auto;
 }
 
 .agenda-fila {
     display: grid;
-    grid-template-columns: 52px repeat(6, 1fr);
+    grid-template-columns: 60px repeat(5, 1fr);
     gap: 2px;
 }
 
@@ -364,13 +365,14 @@ p, li { font-size: 1rem; line-height: 1.65; }
     flex-direction: column;
     gap: 4px;
     min-width: 620px;
-    max-width: 700px;
+    width: 100%;
+    max-width: 1100px;
     margin: 0 auto;
 }
 
 .fila {
     display: grid;
-    grid-template-columns: 58px repeat(7, 1fr);
+    grid-template-columns: 60px repeat(5, 1fr);
     gap: 4px;
 }
 
@@ -391,8 +393,8 @@ p, li { font-size: 1rem; line-height: 1.65; }
 .celda {
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.1);
-    padding: 4px;
-    min-height: 50px;
+    padding: 8px;
+    min-height: 65px;;
     border-radius: 5px;
     display: flex; flex-direction: column;
     gap: 3px; align-items: center;
