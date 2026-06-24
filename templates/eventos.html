@@ -19,13 +19,24 @@
     {% for e in eventos %}
     <div class="evento-tarjeta" onclick="abrirEvento({{ e.id }})" style="cursor:pointer;">
 
-        <!-- Imagen del contenido (preview) -->
-        {% if e.contenido and '<img' in e.contenido %}
-            <div class="evento-thumb">
-                {{ e.contenido|safe }}
-            </div>
-        {% else %}
+        <div class="evento-thumb" id="thumb-{{ e.id }}">
             <div class="evento-thumb-placeholder">📅</div>
+        </div>
+        {% if e.contenido and '<img' in e.contenido %}
+        <script>
+        (function() {
+            var tmp = document.createElement('div');
+            tmp.innerHTML = {{ e.contenido | tojson | safe }};
+            var img = tmp.querySelector('img');
+            if (img) {
+                var thumb = document.getElementById('thumb-{{ e.id }}');
+                thumb.style.backgroundImage = 'url(' + img.src + ')';
+                thumb.style.backgroundSize = 'cover';
+                thumb.style.backgroundPosition = 'center';
+                thumb.querySelector('.evento-thumb-placeholder').style.display = 'none';
+            }
+        })();
+        </script>
         {% endif %}
 
         <div class="evento-tarjeta-info">
@@ -41,7 +52,7 @@
         </div>
     </div>
 
-    <!-- Modal de este evento -->
+    <!-- Modal -->
     <div id="modal-{{ e.id }}" class="evento-modal" onclick="cerrarEvento({{ e.id }})">
         <div class="evento-modal-inner" onclick="event.stopPropagation()">
             <button class="evento-modal-cerrar" onclick="cerrarEvento({{ e.id }})">✕</button>
@@ -79,7 +90,6 @@
 
 {% block scripts %}
 <style>
-/* Grid de tarjetas */
 .eventos-cards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -87,39 +97,31 @@
     margin-top: 10px;
 }
 
-/* Tarjeta */
-.evento-thumb {
-    width: 100%;
-    height: 320px;
+.evento-tarjeta {
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
     overflow: hidden;
-    background: rgba(0,0,0,0.3);
-    position: relative;
+    transition: transform 0.2s, border-color 0.2s;
 }
-.evento-thumb * { display: none !important; }
-.evento-thumb img {
-    display: block !important;
-    width: 100% !important;
-    height: 320px !important;
-    object-fit: cover !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    border: none !important;
-    border-radius: 0 !important;
-    position: absolute;
-    top: 0; left: 0;
+.evento-tarjeta:hover {
+    transform: translateY(-4px);
+    border-color: #9146FF;
 }
 
-.evento-thumb-placeholder {
+.evento-thumb {
     width: 100%;
-    height: 320px;
+    height: 280px;
     background: rgba(145,70,255,0.15);
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.evento-thumb-placeholder {
     font-size: 3rem;
 }
 
-/* Info debajo de la imagen */
 .evento-tarjeta-info {
     padding: 14px 16px;
 }
@@ -134,7 +136,6 @@
     margin: 0 0 10px;
 }
 
-/* Modal */
 .evento-modal {
     display: none;
     position: fixed;
@@ -194,7 +195,6 @@ function cerrarEvento(id) {
     document.getElementById('modal-' + id).classList.remove('abierto');
     document.body.style.overflow = '';
 }
-// Cerrar con Escape
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         document.querySelectorAll('.evento-modal.abierto').forEach(function(m) {
