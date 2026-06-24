@@ -386,19 +386,34 @@ p, li { font-size: 1rem; line-height: 1.65; }
 .hora-col {
     background: #ffeb3b; color: #000;
     font-weight: 700; text-align: center;
-    padding: 8px 2px; border-radius: 5px;
-    font-size: 0.78rem;
+    padding: 4px 2px; border-radius: 5px;
+    font-size: 0.72rem;
+}
+
+@media (min-width: 768px) {
+    .hora-col {
+        padding: 8px 2px;
+        font-size: 0.78rem;
+    }
 }
 
 .celda {
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.1);
-    padding: 8px;
-    min-height: 65px;;
+    padding: 4px;
+    min-height: 40px;
     border-radius: 5px;
     display: flex; flex-direction: column;
     gap: 3px; align-items: center;
 }
+
+@media (min-width: 768px) {
+    .celda {
+        padding: 8px;
+        min-height: 65px;
+    }
+}
+
 
 .vacio { color: rgba(255,255,255,0.35); font-size: 1rem; }
 
