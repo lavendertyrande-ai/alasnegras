@@ -261,6 +261,8 @@ p, li { font-size: 1rem; line-height: 1.65; }
     flex-direction: column;
     gap: 2px;
     min-width: 540px;   /* permite scroll en móvil */
+    max-width: 700px;
+    margin: 0 auto;
 }
 
 .agenda-fila {
@@ -362,6 +364,8 @@ p, li { font-size: 1rem; line-height: 1.65; }
     flex-direction: column;
     gap: 4px;
     min-width: 620px;
+    max-width: 700px;
+    margin: 0 auto;
 }
 
 .fila {

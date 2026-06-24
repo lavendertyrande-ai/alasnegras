@@ -25,7 +25,7 @@
 
         <div class="agenda-hora-col">{{ "%02d:00" % hora }}</div>
 
-        {% for dia in range(0, 6) %}
+        {% for dia in range(0, 5) %}
             {% set slot = slots.get((dia, hora)) %}
 
             {% if not slot %}

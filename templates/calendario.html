@@ -4,7 +4,7 @@
 
 {% block content %}
 <h1>Calendario semanal</h1>
-<p>Reservas de lunes a sábado, de 15:00 a 23:00.</p>
+<p>Reservas de lunes a viernes, de 15:00 a 23:00.</p>
 
 <span class="scroll-hint">👉 Desliza para ver todos los días</span>
 
@@ -24,7 +24,7 @@
     <div class="fila">
         <div class="hora-col">{{ "%02d:00" % hora }}</div>
 
-        {% for dia in range(0, 7) %}
+        {% for dia in range(0, 5) %}
         <div class="celda">
             {% set slot = slots.get((dia, hora)) %}
             {% if slot and slot.reservas %}
