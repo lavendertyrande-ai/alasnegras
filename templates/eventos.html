@@ -58,7 +58,7 @@
             <button class="evento-modal-cerrar" onclick="cerrarEvento({{ e.id }})">✕</button>
             <h2>{{ e.titulo }}</h2>
             <p class="evento-fechas">
-                {{ e.fecha_inicio.strftime("%d/%m/%Y %H:%M") }}
+                {% if e.fecha_inicio %}{{ e.fecha_inicio.strftime("%d/%m/%Y %H:%M") }}{% else %}Fecha por confirmar{% endif %}
                 {% if e.fecha_fin %} → {{ e.fecha_fin.strftime("%d/%m/%Y %H:%M") }}{% endif %}
             </p>
             {% if e.url_twitch %}
@@ -111,7 +111,7 @@
 
 .evento-thumb {
     width: 100%;
-    height: 280px;
+    height: 350px;
     background: rgba(145,70,255,0.15);
     display: flex;
     align-items: center;

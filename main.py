@@ -616,8 +616,10 @@ def eventos():
 def admin_eventos():
     if request.method == "POST":
         titulo  = request.form["titulo"]
-        inicio  = datetime.strptime(request.form["inicio"], "%Y-%m-%dT%H:%M")
-        fin     = datetime.strptime(request.form["fin"],    "%Y-%m-%dT%H:%M")
+        inicio_str = request.form.get("inicio", "").strip()
+        fin_str = request.form.get("fin", "").strip()
+        inicio = datetime.strptime(inicio_str, "%Y-%m-%dT%H:%M") if inicio_str else None
+        fin = datetime.strptime(fin_str, "%Y-%m-%dT%H:%M") if fin_str else None
         url     = request.form.get("url")
         contenido = request.form.get("contenido", "")
         db.session.add(Evento(titulo=titulo, fecha_inicio=inicio,
