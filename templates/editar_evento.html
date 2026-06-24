@@ -1,46 +1,117 @@
-{% extends "admin_base.html" %}
-{% block admin_title %}Editar evento{% endblock %}
+{% extends "base.html" %}
+{% set title = "Editar evento" %}
 
-{% block admin_content %}
+{% block content %}
+
 <div class="admin-page-header">
-    <div>
-        <h1>Editar evento</h1>
+    <h1>✏️ Editar evento</h1>
+    <div class="admin-btns">
+        <a href="{{ url_for('admin_eventos') }}" class="btn-admin-accion" style="background:#555;">← Volver a eventos</a>
+        <a href="{{ url_for('admin_logout') }}" class="btn-admin-accion" style="background:#8b1a1a;">Salir admin</a>
     </div>
-    <a href="{{ url_for('admin_eventos') }}" class="admin-btn admin-btn-secondary">← Volver a eventos</a>
 </div>
 
-<form action="{{ url_for('actualizar_evento', id=evento.id) }}" method="POST" class="admin-card" style="max-width: 900px;">
-    <label>Título</label>
-    <input type="text" name="titulo" value="{{ evento.titulo }}" required>
+{% with msgs = get_flashed_messages(with_categories=true) %}
+    {% if msgs %}{% for cat, msg in msgs %}
+        <div class="flash flash-{{ cat }}">{{ msg }}</div>
+    {% endfor %}{% endif %}
+{% endwith %}
 
-    <label>Inicio</label>
-    <input type="datetime-local" name="inicio"
-           value="{{ evento.fecha_inicio.strftime('%Y-%m-%dT%H:%M') }}" required>
+<div class="admin-search-panel" style="max-width:860px; margin: 0 auto;">
+    <form method="POST" action="{{ url_for('editar_evento', id=evento.id) }}"
+          id="form-editar" style="display:flex; flex-direction:column; gap:14px;">
 
-    <label>Fin</label>
-    <input type="datetime-local" name="fin"
-           value="{{ evento.fecha_fin.strftime('%Y-%m-%dT%H:%M') }}" required>
+        <input type="text" name="titulo" value="{{ evento.titulo }}"
+               placeholder="Título del evento" required class="admin-input">
 
-    <label>URL Twitch</label>
-    <input type="text" name="url" value="{{ evento.url_twitch or '' }}">
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:200px;">
+                <label style="font-size:0.85rem; opacity:0.7; display:block; margin-bottom:4px;">Inicio</label>
+                <input type="datetime-local" name="inicio"
+                       value="{{ evento.fecha_inicio.strftime('%Y-%m-%dT%H:%M') }}"
+                       required class="admin-input" style="width:100%;">
+            </div>
+            <div style="flex:1; min-width:200px;">
+                <label style="font-size:0.85rem; opacity:0.7; display:block; margin-bottom:4px;">Fin</label>
+                <input type="datetime-local" name="fin"
+                       value="{{ evento.fecha_fin.strftime('%Y-%m-%dT%H:%M') }}"
+                       required class="admin-input" style="width:100%;">
+            </div>
+        </div>
 
-    <label>Contenido</label>
-    <textarea id="contenido_evento" name="contenido">{{ evento.contenido|safe }}</textarea>
+        <input type="text" name="url" value="{{ evento.url_twitch or '' }}"
+               placeholder="URL Twitch (opcional)" class="admin-input">
 
-    <button type="submit" class="admin-btn" style="margin-top:20px;">Guardar cambios</button>
-</form>
+        <div>
+            <label style="font-size:0.85rem; opacity:0.7; display:block; margin-bottom:6px;">Contenido</label>
+            <div id="editor-quill" style="
+                background: rgba(255,255,255,0.07);
+                border: 1px solid rgba(255,255,255,0.2);
+                border-radius: 0 0 7px 7px;
+                min-height: 220px;
+                color: white;
+            "></div>
+            <input type="hidden" name="contenido" id="contenido-hidden">
+        </div>
+
+        <button type="submit" class="btn-admin-accion" style="width:fit-content;">
+            💾 Guardar cambios
+        </button>
+    </form>
+</div>
+
 {% endblock %}
 
-{% block admin_scripts %}
-<script src="{{ url_for('static', filename='tinymce/tinymce.min.js') }}"></script>
+{% block scripts %}
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
+<style>
+.ql-toolbar {
+    background: rgba(255,255,255,0.12) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    border-bottom: none !important;
+    border-radius: 7px 7px 0 0 !important;
+}
+.ql-toolbar .ql-stroke { stroke: #fff !important; }
+.ql-toolbar .ql-fill  { fill: #fff !important; }
+.ql-toolbar .ql-picker-label { color: #fff !important; }
+.ql-container {
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    border-top: none !important;
+    border-radius: 0 0 7px 7px !important;
+    font-size: 1rem !important;
+}
+.ql-editor { min-height: 200px; color: white; }
+.ql-editor.ql-blank::before { color: rgba(255,255,255,0.35) !important; }
+.ql-picker-options { background: #1a1a2e !important; }
+.ql-picker-item { color: white !important; }
+</style>
+
 <script>
-tinymce.init({
-    selector: '#contenido_evento',
-    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
-    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
-    height: 450,
-    menubar: false,
-    branding: false
+var quill = new Quill('#editor-quill', {
+    theme: 'snow',
+    modules: {
+        toolbar: [
+            [{ 'font': [] }, { 'size': ['small', false, 'large', 'huge'] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'align': [] }],
+            ['link', 'image'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['clean']
+        ]
+    }
+});
+
+// Cargar contenido existente
+var contenidoExistente = {{ evento.contenido | tojson | safe if evento.contenido else '""' }};
+if (contenidoExistente) {
+    quill.root.innerHTML = contenidoExistente;
+}
+
+document.getElementById('form-editar').addEventListener('submit', function() {
+    document.getElementById('contenido-hidden').value = quill.root.innerHTML;
 });
 </script>
 {% endblock %}
