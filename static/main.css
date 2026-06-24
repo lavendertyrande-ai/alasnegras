@@ -226,8 +226,7 @@ body::before {
     text-align: center;
 }
 
-h1, h2, h3, p, li, a, span, label {
-h1, h2, h3, p, li, a, span, label {
+h1, h2, h3, p, li {
     text-shadow:
         1px 1px 4px rgba(0,0,0,1),
         0 0 12px rgba(0,0,0,0.9),
@@ -237,8 +236,14 @@ h1, h2, h3, p, li, a, span, label {
 
 
 .contenido ul {
-    list-style-position: inside;
+    list-style: none;
     padding-left: 0;
+    text-align: center;
+}
+
+.contenido ul li::before {
+    content: "• ";
+    color: #ff7070;
 }
 
 
@@ -535,7 +540,11 @@ p, li { font-size: 1rem; line-height: 1.65; }
    ========================================================= */
 
 footer {
-    text-align: center; padding: 20px 0;
-    margin-top: 40px; font-size: 0.85rem;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: 40px;
+    font-size: 0.85rem;
     opacity: 0.6;
+    border-top: 1px solid rgba(255,255,255,0.2);
+    width: 100%;
 }
