@@ -17,50 +17,130 @@
     {% endfor %}{% endif %}
 {% endwith %}
 
-<div class="admin-search-panel" style="max-width:700px;">
-    <h2 style="margin-top:0; font-size:1rem; opacity:0.8;">Crear nuevo evento</h2>
-    <form method="POST" action="{{ url_for('admin_eventos') }}" style="display:flex; flex-direction:column; gap:12px;">
+<div class="admin-search-panel" style="max-width:860px; margin: 0 auto 40px;">
+    <h2 style="margin-top:0; font-size:1.1rem; opacity:0.8;">Crear nuevo evento</h2>
+    <form method="POST" action="{{ url_for('admin_eventos') }}" id="form-evento"
+          style="display:flex; flex-direction:column; gap:14px;">
+
         <input type="text" name="titulo" placeholder="Título del evento" required class="admin-input">
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
             <div style="flex:1; min-width:200px;">
-                <label style="font-size:0.85rem; opacity:0.7;">Inicio</label>
+                <label style="font-size:0.85rem; opacity:0.7; display:block; margin-bottom:4px;">Inicio</label>
                 <input type="datetime-local" name="inicio" required class="admin-input" style="width:100%;">
             </div>
             <div style="flex:1; min-width:200px;">
-                <label style="font-size:0.85rem; opacity:0.7;">Fin</label>
+                <label style="font-size:0.85rem; opacity:0.7; display:block; margin-bottom:4px;">Fin</label>
                 <input type="datetime-local" name="fin" required class="admin-input" style="width:100%;">
             </div>
         </div>
+
         <input type="text" name="url" placeholder="URL Twitch (opcional)" class="admin-input">
-        <textarea name="contenido" rows="5" placeholder="Descripción del evento..."
-                  class="admin-input" style="resize:vertical;"></textarea>
-        <button type="submit" class="btn-admin-accion" style="width:fit-content;">Guardar evento</button>
+
+        <!-- Editor Quill -->
+        <div>
+            <label style="font-size:0.85rem; opacity:0.7; display:block; margin-bottom:6px;">Contenido</label>
+            <div id="editor-quill" style="
+                background: rgba(255,255,255,0.07);
+                border: 1px solid rgba(255,255,255,0.2);
+                border-radius: 0 0 7px 7px;
+                min-height: 220px;
+                color: white;
+                font-size: 1rem;
+            "></div>
+            <!-- Campo oculto donde guardamos el HTML -->
+            <input type="hidden" name="contenido" id="contenido-hidden">
+        </div>
+
+        <button type="submit" class="btn-admin-accion" style="width:fit-content;">
+            💾 Guardar evento
+        </button>
     </form>
 </div>
 
-<h2 style="margin-top:40px;">Eventos existentes</h2>
-
-<div class="eventos-grid" style="margin-top:16px;">
-    {% for e in eventos %}
-        <div class="evento-card">
-            <h3 style="margin-top:0;">{{ e.titulo }}</h3>
-            <p style="font-size:0.85rem; opacity:0.7;">
-                {{ e.fecha_inicio.strftime("%d/%m/%Y %H:%M") }} → {{ e.fecha_fin.strftime("%d/%m/%Y %H:%M") }}
-            </p>
-            {% if e.url_twitch %}
-                <p style="font-size:0.85rem;">🔗 <a href="{{ e.url_twitch }}" target="_blank" style="color:#9146FF;">{{ e.url_twitch }}</a></p>
-            {% endif %}
-            <div style="display:flex; gap:8px; margin-top:10px;">
-                <a href="{{ url_for('editar_evento', id=e.id) }}" class="btn-admin-accion" style="padding:6px 12px; font-size:0.85rem;">Editar</a>
-                <a href="{{ url_for('eliminar_evento', id=e.id) }}"
-                   class="btn-admin-accion"
-                   style="padding:6px 12px; font-size:0.85rem; background:#8b1a1a;"
-                   onclick="return confirm('¿Eliminar este evento?');">Eliminar</a>
+<div style="max-width:860px; margin: 0 auto;">
+    <h2>Eventos existentes</h2>
+    <div class="eventos-grid" style="margin-top:16px;">
+        {% for e in eventos %}
+            <div class="evento-card">
+                <h3 style="margin-top:0;">{{ e.titulo }}</h3>
+                <p style="font-size:0.85rem; opacity:0.7;">
+                    {{ e.fecha_inicio.strftime("%d/%m/%Y %H:%M") }} →
+                    {{ e.fecha_fin.strftime("%d/%m/%Y %H:%M") }}
+                </p>
+                {% if e.url_twitch %}
+                    <p style="font-size:0.85rem;">
+                        🔗 <a href="{{ e.url_twitch }}" target="_blank" style="color:#9146FF;">Ver directo</a>
+                    </p>
+                {% endif %}
+                <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+                    <a href="{{ url_for('editar_evento', id=e.id) }}"
+                       class="btn-admin-accion" style="padding:6px 12px; font-size:0.85rem;">✏️ Editar</a>
+                    <a href="{{ url_for('eliminar_evento', id=e.id) }}"
+                       class="btn-admin-accion"
+                       style="padding:6px 12px; font-size:0.85rem; background:#8b1a1a;"
+                       onclick="return confirm('¿Eliminar este evento?');">🗑️ Eliminar</a>
+                </div>
             </div>
-        </div>
-    {% else %}
-        <p>No hay eventos todavía.</p>
-    {% endfor %}
+        {% else %}
+            <p>No hay eventos todavía.</p>
+        {% endfor %}
+    </div>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<!-- Quill CSS -->
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<!-- Quill JS -->
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
+<style>
+/* Adaptar Quill al tema oscuro */
+.ql-toolbar {
+    background: rgba(255,255,255,0.12) !important;
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    border-bottom: none !important;
+    border-radius: 7px 7px 0 0 !important;
+}
+.ql-toolbar .ql-stroke { stroke: #fff !important; }
+.ql-toolbar .ql-fill  { fill: #fff !important; }
+.ql-toolbar .ql-picker-label { color: #fff !important; }
+.ql-toolbar button:hover .ql-stroke { stroke: #9146FF !important; }
+.ql-container {
+    border: 1px solid rgba(255,255,255,0.2) !important;
+    border-top: none !important;
+    border-radius: 0 0 7px 7px !important;
+    font-size: 1rem !important;
+}
+.ql-editor { min-height: 200px; color: white; }
+.ql-editor.ql-blank::before { color: rgba(255,255,255,0.35) !important; }
+.ql-picker-options { background: #1a1a2e !important; }
+.ql-picker-item { color: white !important; }
+</style>
+
+<script>
+var quill = new Quill('#editor-quill', {
+    theme: 'snow',
+    placeholder: 'Escribe aquí el contenido del evento...',
+    modules: {
+        toolbar: [
+            [{ 'font': [] }, { 'size': ['small', false, 'large', 'huge'] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'align': [] }],
+            ['link', 'image'],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['emoji'],
+            ['clean']
+        ]
+    }
+});
+
+// Antes de enviar el formulario, copiar el HTML al campo oculto
+document.getElementById('form-evento').addEventListener('submit', function() {
+    document.getElementById('contenido-hidden').value = quill.root.innerHTML;
+});
+</script>
 {% endblock %}
