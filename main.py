@@ -607,7 +607,7 @@ def upload_image():
 
 @app.route("/eventos")
 def eventos():
-    lista = Evento.query.order_by(Evento.fecha_inicio.asc()).all()
+    lista = Evento.query.order_by(Evento.creado.asc()).all()
     return render_template("eventos.html", eventos=lista)
 
 
@@ -637,8 +637,10 @@ def editar_evento(id):
     evento = Evento.query.get_or_404(id)
     if request.method == "POST":
         evento.titulo       = request.form["titulo"]
-        evento.fecha_inicio = datetime.strptime(request.form["inicio"], "%Y-%m-%dT%H:%M")
-        evento.fecha_fin    = datetime.strptime(request.form["fin"],    "%Y-%m-%dT%H:%M")
+        inicio_str = request.form.get("inicio", "").strip()
+        fin_str = request.form.get("fin", "").strip()
+        evento.fecha_inicio = datetime.strptime(inicio_str, "%Y-%m-%dT%H:%M") if inicio_str else None
+        evento.fecha_fin = datetime.strptime(fin_str, "%Y-%m-%dT%H:%M") if fin_str else None
         evento.url_twitch   = request.form.get("url")
         evento.contenido    = request.form.get("contenido", "")
         db.session.commit()
