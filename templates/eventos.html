@@ -82,51 +82,36 @@
 /* Grid de tarjetas */
 .eventos-cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
     margin-top: 10px;
 }
 
 /* Tarjeta */
-.evento-tarjeta {
-    background: rgba(0,0,0,0.55);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 12px;
-    overflow: hidden;
-    transition: transform 0.2s, border-color 0.2s;
-}
-.evento-tarjeta:hover {
-    transform: translateY(-4px);
-    border-color: #9146FF;
-}
-
-/* Preview imagen */
 .evento-thumb {
     width: 100%;
-    height: 180px;
+    height: 200px;
     overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     background: rgba(0,0,0,0.3);
+    position: relative;
 }
+.evento-thumb * { display: none !important; }
 .evento-thumb img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    display: block;
+    display: block !important;
+    width: 100% !important;
+    height: 200px !important;
+    object-fit: cover !important;
     margin: 0 !important;
     padding: 0 !important;
     border: none !important;
     border-radius: 0 !important;
+    position: absolute;
+    top: 0; left: 0;
 }
-/* Ocultar todo lo que no sea imagen en el thumb */
-.evento-thumb > *:not(img) { display: none; }
-.evento-thumb img ~ * { display: none; }
 
 .evento-thumb-placeholder {
     width: 100%;
-    height: 180px;
+    height: 200px;
     background: rgba(145,70,255,0.15);
     display: flex;
     align-items: center;
