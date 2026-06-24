@@ -208,7 +208,12 @@ body::before {
     display: block;
     object-fit: contain;
 }
-
+@media (min-width: 768px) {
+    .banner-img {
+        height: 300px;
+        object-fit: cover;
+    }
+}
 /* =========================================================
    CONTENIDO GENERAL
    ========================================================= */
