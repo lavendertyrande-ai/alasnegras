@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% set title = "Registro de apoyos" %}
+
+{% block content %}
+
+<h1>🤝 Registro de apoyos</h1>
+<p>Historial de apoyos realizados en los directos de la comunidad.</p>
+
+<!-- Tabs -->
+<div class="apoyos-tabs">
+    <button class="apoyos-tab active" onclick="mostrarTab('semana', this)">Esta semana</button>
+    <button class="apoyos-tab" onclick="mostrarTab('historico', this)">Histórico</button>
+</div>
+
+<!-- Esta semana -->
+<div id="tab-semana" class="apoyos-contenido">
+    <div class="apoyos-vacio">
+        <div class="apoyos-vacio-icono">🤖</div>
+        <h2>Bot de supervisión en desarrollo</h2>
+        <p>Pronto aquí aparecerá el registro detallado de apoyos:<br>
+        tiempo conectado a cada canal, presencia en chat y más.</p>
+        <div class="apoyos-coming-soon">
+            <div class="coming-item">⏱ Tiempo en canal</div>
+            <div class="coming-item">💬 Mensajes en chat</div>
+            <div class="coming-item">📊 Ranking semanal</div>
+        </div>
+    </div>
+</div>
+
+<!-- Histórico -->
+<div id="tab-historico" class="apoyos-contenido" style="display:none;">
+    <div class="apoyos-vacio">
+        <div class="apoyos-vacio-icono">📊</div>
+        <h2>Sin datos históricos aún</h2>
+        <p>El historial acumulado aparecerá aquí una vez que el bot esté activo.</p>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+.apoyos-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 20px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    padding-bottom: 0;
+}
+
+.apoyos-tab {
+    padding: 10px 24px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.5);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: 0.2s;
+    font-family: "Poppins", sans-serif;
+}
+.apoyos-tab:hover { color: white; }
+.apoyos-tab.active {
+    color: #9146FF;
+    border-bottom-color: #9146FF;
+}
+
+.apoyos-contenido { margin-top: 24px; }
+
+.apoyos-vacio {
+    text-align: center;
+    padding: 60px 20px;
+    max-width: 500px;
+    margin: 0 auto;
+}
+.apoyos-vacio-icono {
+    font-size: 4rem;
+    margin-bottom: 16px;
+}
+.apoyos-vacio h2 {
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+}
+.apoyos-vacio p {
+    opacity: 0.6;
+    line-height: 1.7;
+    margin-bottom: 24px;
+}
+
+.apoyos-coming-soon {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+.coming-item {
+    background: rgba(145,70,255,0.15);
+    border: 1px solid rgba(145,70,255,0.35);
+    color: #b57aff;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Tabla (preparada para cuando lleguen datos del bot) */
+.apoyos-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+}
+.apoyos-tabla th {
+    background: rgba(145,70,255,0.2);
+    color: #b57aff;
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+.apoyos-tabla td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.85);
+}
+.apoyos-tabla tr:hover td {
+    background: rgba(255,255,255,0.04);
+}
+.apoyo-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid rgba(145,70,255,0.4);
+    vertical-align: middle;
+    margin-right: 8px;
+}
+.apoyo-badge-tiempo {
+    background: rgba(76,175,80,0.2);
+    border: 1px solid rgba(76,175,80,0.4);
+    color: #a5d6a7;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+.apoyo-badge-chat {
+    background: rgba(33,150,243,0.2);
+    border: 1px solid rgba(33,150,243,0.4);
+    color: #90caf9;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+</style>
+
+<script>
+function mostrarTab(tab, btn) {
+    document.querySelectorAll('.apoyos-contenido').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.apoyos-tab').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tab).style.display = 'block';
+    btn.classList.add('active');
+}
+</script>
+{% endblock %}

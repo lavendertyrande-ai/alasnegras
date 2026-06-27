@@ -759,6 +759,20 @@ def eliminar_evento(id):
     return redirect(url_for("eventos"))
 
 
+
+# -----------------------------------------------------------
+# APOYOS
+# -----------------------------------------------------------
+
+@app.route("/apoyos")
+def apoyos():
+    if not session.get("twitch_id"):
+        flash("Debes iniciar sesión para ver los apoyos.", "error")
+        return redirect(url_for("login_twitch"))
+    return render_template("apoyos.html")
+
+
+
 # -----------------------------------------------------------
 # EJECUCIÓN
 # -----------------------------------------------------------
