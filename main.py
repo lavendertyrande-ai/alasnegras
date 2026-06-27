@@ -1,6 +1,8 @@
 # -----------------------------------------------------------
 # IMPORTS
 # -----------------------------------------------------------
+from sched import scheduler
+
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -55,8 +57,14 @@ def reset_reservas_apoyo():
         ReservaApoyo.query.delete()
         db.session.commit()
 
-scheduler = BackgroundScheduler()
-scheduler.add_job(func=reset_reservas_apoyo, trigger="cron", day_of_week="sat", hour=23, minute=59)
+scheduler.add_job(
+    func=reset_reservas_apoyo,
+    trigger="cron",
+    day_of_week="sat",
+    hour=23,
+    minute=59,
+    timezone=pytz.timezone("Europe/Madrid")
+)
 
 # Solo arrancar scheduler si NO estamos en el proceso de recarga de Flask debug
 if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
