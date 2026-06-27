@@ -3,50 +3,198 @@
 {% set title = "En directo ahora" %}
 
 {% block content %}
-<h1>Directos en vivo</h1>
-<p>Aquí aparecerán los canales que están en directo en este momento.</p>
+
+<h1>🎮 En directo ahora</h1>
+<p>Streamers agendados para apoyar en este momento.</p>
 
 {% if reservas and reservas|length > 0 %}
     <div class="emitiendo-grid">
-
         {% for r in reservas %}
-        <div class="emitiendo-card">
+        <div class="emitiendo-card {% if r.is_live %}emitiendo-card-live{% endif %}">
 
-            <!-- Imagen (miniatura si está en directo, avatar si no) -->
-            <div class="emitiendo-media">
-                {% if r.thumbnail_url %}
-                    <img src="{{ r.thumbnail_url }}" alt="Directo de {{ r.display_name }}">
-                {% elif r.avatar_url %}
-                    <img src="{{ r.avatar_url }}" alt="Avatar de {{ r.display_name }}">
+            <!-- Avatar grande -->
+            <div class="emitiendo-avatar-wrap">
+                {% if r.avatar_url %}
+                    <img src="{{ r.avatar_url }}" alt="{{ r.display_name }}" class="emitiendo-avatar">
                 {% else %}
-                    <div class="emitiendo-placeholder">
-                        {{ r.display_name }}
+                    <div class="emitiendo-avatar-placeholder">
+                        {{ r.display_name[0] | upper }}
                     </div>
+                {% endif %}
+
+                {% if r.is_live %}
+                    <span class="emitiendo-badge-live">EN DIRECTO</span>
+                {% else %}
+                    <span class="emitiendo-badge-off">Sin detectar</span>
                 {% endif %}
             </div>
 
-            <!-- Información -->
+            <!-- Info -->
             <div class="emitiendo-info">
                 <h2>{{ r.display_name }}</h2>
+                <p class="emitiendo-login">twitch.tv/{{ r.login }}</p>
 
-                <a href="{{ r.channel_url }}" target="_blank" class="btn-ver">
-                    Ir al canal
+                <a href="{{ r.channel_url }}" target="_blank" class="emitiendo-btn-canal">
+                    🎯 Ir al canal y apoyar
                 </a>
 
-                {% if r.is_live %}
-                    <div class="emitiendo-live">EN DIRECTO</div>
-                {% else %}
-                    <div class="emitiendo-off">No detectado en directo</div>
+                {% if r.thumbnail_url %}
+                <div class="emitiendo-thumb-wrap">
+                    <img src="{{ r.thumbnail_url }}" alt="Stream de {{ r.display_name }}"
+                         class="emitiendo-thumb">
+                </div>
                 {% endif %}
             </div>
 
         </div>
         {% endfor %}
-
     </div>
 
 {% else %}
-    <p>No hay nadie agendado en este momento.</p>
+    <div class="emitiendo-vacio">
+        <div class="emitiendo-vacio-icono">📺</div>
+        <h2>No hay directos agendados ahora mismo</h2>
+        <p>Consulta el <a href="{{ url_for('agendas') }}" style="color:#9146FF;">calendario de agendas</a> para ver los próximos horarios.</p>
+    </div>
 {% endif %}
 
+{% endblock %}
+
+{% block scripts %}
+<style>
+.emitiendo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.emitiendo-card {
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    transition: 0.2s;
+}
+
+.emitiendo-card-live {
+    border-color: #ff4d4d;
+    box-shadow: 0 0 15px rgba(255,77,77,0.3);
+}
+
+.emitiendo-card:hover {
+    transform: translateY(-4px);
+}
+
+/* Avatar */
+.emitiendo-avatar-wrap {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 16px;
+}
+
+.emitiendo-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.3);
+    display: block;
+}
+
+.emitiendo-avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: #9146FF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: white;
+}
+
+.emitiendo-badge-live {
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    background: #ff4d4d;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.emitiendo-badge-off {
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.2);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+/* Info */
+.emitiendo-info h2 {
+    margin: 0 0 4px;
+    font-size: 1.3rem;
+}
+
+.emitiendo-login {
+    font-size: 0.85rem;
+    opacity: 0.55;
+    margin: 0 0 16px;
+}
+
+.emitiendo-btn-canal {
+    display: inline-block;
+    padding: 12px 20px;
+    background: #9146FF;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: 0.2s;
+    margin-bottom: 16px;
+}
+.emitiendo-btn-canal:hover {
+    background: #772ce8;
+    transform: scale(1.03);
+}
+
+/* Miniatura stream */
+.emitiendo-thumb-wrap {
+    margin-top: 12px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.emitiendo-thumb {
+    width: 100%;
+    border-radius: 8px;
+    display: block;
+}
+
+/* Vacío */
+.emitiendo-vacio {
+    text-align: center;
+    padding: 60px 20px;
+    opacity: 0.7;
+}
+.emitiendo-vacio-icono {
+    font-size: 4rem;
+    margin-bottom: 16px;
+}
+.emitiendo-vacio h2 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+</style>
 {% endblock %}
