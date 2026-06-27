@@ -11,7 +11,7 @@ import requests, os, pytz
 
 from db import db
 from werkzeug.utils import secure_filename
-from models import TwitchUser, Directo, SlotApoyo, ReservaApoyo, Evento, AdminCode
+from models import TwitchUser, Directo, SlotApoyo, ReservaApoyo, Evento, AdminCode, Clip, RegistroApoyo
 import bot_irc
 
 
