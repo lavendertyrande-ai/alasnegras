@@ -52,19 +52,15 @@ TZ_SPAIN = pytz.timezone("Europe/Madrid")
 def enviar_mensaje_telegram(mensaje):
     token   = os.environ.get("TELEGRAM_BOT_TOKEN")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
-    print(f">>> TOKEN: {token}")
-    print(f">>> CHAT_ID: {chat_id}")
     if not token or not chat_id:
-        print(">>> ERROR: faltan variables de entorno")
         return
     try:
-        resp = requests.post(
+        requests.post(
             f"https://api.telegram.org/bot{token}/sendMessage",
             data={"chat_id": chat_id, "text": mensaje, "parse_mode": "HTML"}
         )
-        print(f">>> Respuesta Telegram: {resp.json()}")
     except Exception as e:
-        print(f">>> Error enviando mensaje Telegram: {e}")
+        print(f"Error enviando mensaje Telegram: {e}")
 
 # -----------------------------------------------------------
 # SCHEDULER
@@ -692,14 +688,6 @@ def eliminar_evento(id):
     return redirect(url_for("eventos"))
 
 
-
-
-@app.route("/test_telegram")
-@admin_required
-def test_telegram():
-    enviar_mensaje_telegram("🎮 <b>¡Prueba del bot de Alas Negras!</b>\n\nEl bot está funcionando correctamente. 🖤")
-    flash("Mensaje enviado a Telegram.", "success")
-    return redirect(url_for("admin_agendas_calendario"))
 
 
 # -----------------------------------------------------------
