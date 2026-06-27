@@ -111,3 +111,21 @@ class Clip(db.Model):
     creado_en    = db.Column(db.DateTime, default=datetime.utcnow)
 
     usuario = db.relationship("TwitchUser", backref="clips")
+
+
+
+# -----------------------------------------------------------
+# MODELO: RegistroApoyo
+# Registra tiempo y mensajes de cada usuario en cada canal
+# -----------------------------------------------------------
+class RegistroApoyo(db.Model):
+    id           = db.Column(db.Integer, primary_key=True)
+    usuario_id   = db.Column(db.Integer, db.ForeignKey("twitch_user.id"), nullable=False)
+    canal_id     = db.Column(db.Integer, db.ForeignKey("twitch_user.id"), nullable=False)
+    semana       = db.Column(db.String(20))  # ej: "2026-W26"
+    minutos      = db.Column(db.Integer, default=0)
+    mensajes     = db.Column(db.Integer, default=0)
+    ultima_vez   = db.Column(db.DateTime, default=datetime.utcnow)
+
+    usuario = db.relationship("TwitchUser", foreign_keys=[usuario_id], backref="apoyos_dados")
+    canal   = db.relationship("TwitchUser", foreign_keys=[canal_id],   backref="apoyos_recibidos")

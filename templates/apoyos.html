@@ -6,7 +6,6 @@
 <h1>🤝 Registro de apoyos</h1>
 <p>Historial de apoyos realizados en los directos de la comunidad.</p>
 
-<!-- Tabs -->
 <div class="apoyos-tabs">
     <button class="apoyos-tab active" onclick="mostrarTab('semana', this)">Esta semana</button>
     <button class="apoyos-tab" onclick="mostrarTab('historico', this)">Histórico</button>
@@ -14,26 +13,119 @@
 
 <!-- Esta semana -->
 <div id="tab-semana" class="apoyos-contenido">
+    {% if apoyos_semana %}
+    <div style="overflow-x:auto;">
+    <table class="apoyos-tabla">
+        <thead>
+            <tr>
+                <th>Quien apoyó</th>
+                <th>Canal apoyado</th>
+                <th>Tiempo</th>
+                <th>Mensajes</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for r in apoyos_semana %}
+            <tr>
+                <td>
+                    {% if r.usuario.avatar_url %}
+                        <img src="{{ r.usuario.avatar_url }}" class="apoyo-avatar">
+                    {% endif %}
+                    {{ r.usuario.display_name }}
+                </td>
+                <td>
+                    {% if r.canal.avatar_url %}
+                        <img src="{{ r.canal.avatar_url }}" class="apoyo-avatar">
+                    {% endif %}
+                    <a href="https://twitch.tv/{{ r.canal.login }}" target="_blank"
+                       style="color:#9146FF;">{{ r.canal.display_name }}</a>
+                </td>
+                <td>
+                    <span class="apoyo-badge-tiempo">
+                        {% if r.minutos >= 60 %}
+                            {{ (r.minutos // 60) }}h {{ (r.minutos % 60) }}min
+                        {% else %}
+                            {{ r.minutos }}min
+                        {% endif %}
+                    </span>
+                </td>
+                <td>
+                    <span class="apoyo-badge-chat">💬 {{ r.mensajes }}</span>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
     <div class="apoyos-vacio">
         <div class="apoyos-vacio-icono">🤖</div>
-        <h2>Bot de supervisión en desarrollo</h2>
-        <p>Pronto aquí aparecerá el registro detallado de apoyos:<br>
-        tiempo conectado a cada canal, presencia en chat y más.</p>
+        <h2>Sin datos esta semana todavía</h2>
+        <p>Los apoyos aparecerán aquí automáticamente durante los directos agendados.</p>
         <div class="apoyos-coming-soon">
             <div class="coming-item">⏱ Tiempo en canal</div>
             <div class="coming-item">💬 Mensajes en chat</div>
             <div class="coming-item">📊 Ranking semanal</div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <!-- Histórico -->
 <div id="tab-historico" class="apoyos-contenido" style="display:none;">
+    {% if apoyos_historico %}
+    <div style="overflow-x:auto;">
+    <table class="apoyos-tabla">
+        <thead>
+            <tr>
+                <th>Quien apoyó</th>
+                <th>Canal apoyado</th>
+                <th>Semana</th>
+                <th>Tiempo</th>
+                <th>Mensajes</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for r in apoyos_historico %}
+            <tr>
+                <td>
+                    {% if r.usuario.avatar_url %}
+                        <img src="{{ r.usuario.avatar_url }}" class="apoyo-avatar">
+                    {% endif %}
+                    {{ r.usuario.display_name }}
+                </td>
+                <td>
+                    {% if r.canal.avatar_url %}
+                        <img src="{{ r.canal.avatar_url }}" class="apoyo-avatar">
+                    {% endif %}
+                    <a href="https://twitch.tv/{{ r.canal.login }}" target="_blank"
+                       style="color:#9146FF;">{{ r.canal.display_name }}</a>
+                </td>
+                <td style="font-size:0.8rem; opacity:0.6;">{{ r.semana }}</td>
+                <td>
+                    <span class="apoyo-badge-tiempo">
+                        {% if r.minutos >= 60 %}
+                            {{ (r.minutos // 60) }}h {{ (r.minutos % 60) }}min
+                        {% else %}
+                            {{ r.minutos }}min
+                        {% endif %}
+                    </span>
+                </td>
+                <td>
+                    <span class="apoyo-badge-chat">💬 {{ r.mensajes }}</span>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
     <div class="apoyos-vacio">
         <div class="apoyos-vacio-icono">📊</div>
         <h2>Sin datos históricos aún</h2>
-        <p>El historial acumulado aparecerá aquí una vez que el bot esté activo.</p>
+        <p>El historial aparecerá aquí una vez que el bot registre los primeros apoyos.</p>
     </div>
+    {% endif %}
 </div>
 
 {% endblock %}
@@ -45,9 +137,7 @@
     gap: 8px;
     margin: 20px 0;
     border-bottom: 1px solid rgba(255,255,255,0.15);
-    padding-bottom: 0;
 }
-
 .apoyos-tab {
     padding: 10px 24px;
     background: none;
@@ -62,39 +152,20 @@
     font-family: "Poppins", sans-serif;
 }
 .apoyos-tab:hover { color: white; }
-.apoyos-tab.active {
-    color: #9146FF;
-    border-bottom-color: #9146FF;
-}
-
+.apoyos-tab.active { color: #9146FF; border-bottom-color: #9146FF; }
 .apoyos-contenido { margin-top: 24px; }
-
 .apoyos-vacio {
     text-align: center;
     padding: 60px 20px;
     max-width: 500px;
     margin: 0 auto;
 }
-.apoyos-vacio-icono {
-    font-size: 4rem;
-    margin-bottom: 16px;
-}
-.apoyos-vacio h2 {
-    font-size: 1.5rem;
-    margin-bottom: 12px;
-}
-.apoyos-vacio p {
-    opacity: 0.6;
-    line-height: 1.7;
-    margin-bottom: 24px;
-}
-
+.apoyos-vacio-icono { font-size: 4rem; margin-bottom: 16px; }
+.apoyos-vacio h2 { font-size: 1.5rem; margin-bottom: 12px; }
+.apoyos-vacio p { opacity: 0.6; line-height: 1.7; margin-bottom: 24px; }
 .apoyos-coming-soon {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin-top: 20px;
+    display: flex; gap: 12px;
+    justify-content: center; flex-wrap: wrap;
 }
 .coming-item {
     background: rgba(145,70,255,0.15);
@@ -105,8 +176,6 @@
     font-size: 0.9rem;
     font-weight: 600;
 }
-
-/* Tabla (preparada para cuando lleguen datos del bot) */
 .apoyos-tabla {
     width: 100%;
     border-collapse: collapse;
@@ -119,17 +188,13 @@
     text-align: left;
     font-size: 0.85rem;
     font-weight: 700;
-    letter-spacing: 0.05em;
 }
 .apoyos-tabla td {
     padding: 12px 16px;
     border-bottom: 1px solid rgba(255,255,255,0.07);
     font-size: 0.9rem;
-    color: rgba(255,255,255,0.85);
 }
-.apoyos-tabla tr:hover td {
-    background: rgba(255,255,255,0.04);
-}
+.apoyos-tabla tr:hover td { background: rgba(255,255,255,0.04); }
 .apoyo-avatar {
     width: 28px; height: 28px;
     border-radius: 50%;
@@ -156,7 +221,6 @@
     font-weight: 700;
 }
 </style>
-
 <script>
 function mostrarTab(tab, btn) {
     document.querySelectorAll('.apoyos-contenido').forEach(el => el.style.display = 'none');
