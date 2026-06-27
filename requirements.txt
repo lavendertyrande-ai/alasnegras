@@ -7,3 +7,4 @@ pytz==2024.1
 werkzeug==3.0.3
 gunicorn==22.0.0
 psycopg2-binary
+websocket-client==1.7.0
