@@ -239,7 +239,7 @@ def generar_slots_agenda_base():
         SlotApoyo.query.delete()
         db.session.commit()
 
-        for dia in range(0, 5):
+        for dia in range(0, 6):
             for hora in range(15, 24):
                 inicio = time(hora, 0)
                 fin    = time((hora + 1) % 24, 0)

@@ -11,21 +11,19 @@
 <div class="agenda-scroll">
 <div class="agenda-semanal">
 
-    <!-- Encabezado de días -->
     <div class="agenda-fila encabezado">
         <div class="agenda-hora-col"></div>
-        {% for dia in ["Lun","Mar","Mié","Jue","Vie"] %}
+        {% for dia in ["Lun","Mar","Mié","Jue","Vie","Sáb"] %}
             <div class="agenda-dia-col">{{ dia }}</div>
         {% endfor %}
     </div>
 
-    <!-- Filas por hora -->
     {% for hora in range(15, 24) %}
     <div class="agenda-fila">
 
         <div class="agenda-hora-col">{{ "%02d:00" % hora }}</div>
 
-        {% for dia in range(0, 5) %}
+        {% for dia in range(0, 6) %}
             {% set slot = slots.get((dia, hora)) %}
 
             {% if not slot %}
@@ -79,5 +77,5 @@
     {% endfor %}
 
 </div>
-</div><!-- /agenda-scroll -->
+</div>
 {% endblock %}
