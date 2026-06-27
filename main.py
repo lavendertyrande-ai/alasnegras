@@ -52,16 +52,19 @@ TZ_SPAIN = pytz.timezone("Europe/Madrid")
 def enviar_mensaje_telegram(mensaje):
     token   = os.environ.get("TELEGRAM_BOT_TOKEN")
     chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    print(f">>> TOKEN: {token}")
+    print(f">>> CHAT_ID: {chat_id}")
     if not token or not chat_id:
+        print(">>> ERROR: faltan variables de entorno")
         return
     try:
-        requests.post(
+        resp = requests.post(
             f"https://api.telegram.org/bot{token}/sendMessage",
             data={"chat_id": chat_id, "text": mensaje, "parse_mode": "HTML"}
         )
+        print(f">>> Respuesta Telegram: {resp.json()}")
     except Exception as e:
-        print(f"Error enviando mensaje Telegram: {e}")
-
+        print(f">>> Error enviando mensaje Telegram: {e}")
 
 # -----------------------------------------------------------
 # SCHEDULER
