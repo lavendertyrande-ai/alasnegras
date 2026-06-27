@@ -93,3 +93,21 @@ class Evento(db.Model):
 
     def __repr__(self):
         return f"<Evento {self.titulo}>"
+
+
+# -----------------------------------------------------------
+# MODELO: Clip
+# -----------------------------------------------------------
+class Clip(db.Model):
+    id           = db.Column(db.Integer, primary_key=True)
+    clip_id      = db.Column(db.String(200), unique=True, nullable=False)  # ID de Twitch
+    usuario_id   = db.Column(db.Integer, db.ForeignKey("twitch_user.id"), nullable=False)
+    titulo       = db.Column(db.String(300))
+    url          = db.Column(db.String(300))
+    thumbnail_url= db.Column(db.String(300))
+    embed_url    = db.Column(db.String(300))
+    duracion     = db.Column(db.Float)
+    vistas       = db.Column(db.Integer, default=0)
+    creado_en    = db.Column(db.DateTime, default=datetime.utcnow)
+
+    usuario = db.relationship("TwitchUser", backref="clips")

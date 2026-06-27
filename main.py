@@ -68,9 +68,11 @@ def enviar_mensaje_telegram(mensaje):
 # -----------------------------------------------------------
 def reset_reservas_apoyo():
     with app.app_context():
+        from models import Clip
+        Clip.query.delete()
         ReservaApoyo.query.delete()
         db.session.commit()
-        print(">>> Reservas reseteadas:", datetime.utcnow())
+        print(">>> Reservas y clips reseteados:", datetime.utcnow())
 
 
 def notificar_directos_telegram():
@@ -116,6 +118,76 @@ scheduler.add_job(
 
 if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
     scheduler.start()
+
+# -----------------------------------------------------------
+# CLIPS
+# -----------------------------------------------------------
+
+@app.route("/clips")
+def clips():
+    from models import Clip
+    lista = Clip.query.order_by(Clip.creado_en.desc()).all()
+    return render_template("clips.html", clips=lista)
+
+
+
+
+def recoger_clips_streamers():
+    """Recoge clips recientes de los streamers agendados en la hora actual."""
+    with app.app_context():
+        from models import Clip
+        ahora_spain = hora_spain()
+        dia_actual  = ahora_spain.weekday()
+        hora_actual = ahora_spain.hour
+
+        slots = SlotApoyo.query.all()
+        mapa  = {(s.dia_semana, s.hora_inicio.hour): s for s in slots}
+        slot_actual = mapa.get((dia_actual, hora_actual))
+
+        if not slot_actual or not slot_actual.reservas:
+            return
+
+        token = get_twitch_app_token()
+        headers = {
+            "Client-ID":     TWITCH_CLIENT_ID,
+            "Authorization": f"Bearer {token}",
+        }
+
+        for reserva in slot_actual.reservas:
+            usuario = reserva.usuario
+            if not usuario:
+                continue
+
+            resp = requests.get(
+                "https://api.twitch.tv/helix/clips",
+                headers=headers,
+                params={
+                    "broadcaster_id": usuario.twitch_id,
+                    "first": 10
+                }
+            ).json()
+
+            for clip_data in resp.get("data", []):
+                # Solo guardar si no existe ya
+                if Clip.query.filter_by(clip_id=clip_data["id"]).first():
+                    continue
+
+                embed = f"https://clips.twitch.tv/embed?clip={clip_data['id']}&parent=alasnegras.onrender.com"
+
+                db.session.add(Clip(
+                    clip_id      = clip_data["id"],
+                    usuario_id   = usuario.id,
+                    titulo       = clip_data.get("title", "Sin título"),
+                    url          = clip_data.get("url", ""),
+                    thumbnail_url= clip_data.get("thumbnail_url", ""),
+                    embed_url    = embed,
+                    duracion     = clip_data.get("duration", 0),
+                    vistas       = clip_data.get("view_count", 0),
+                ))
+
+        db.session.commit()
+        print(">>> Clips recogidos:", datetime.utcnow())
+
 
 
 # -----------------------------------------------------------

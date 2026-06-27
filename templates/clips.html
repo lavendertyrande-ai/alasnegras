@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% set banner = "img/ahora_en_directo.png" %}
+{% set title = "Clips de la semana" %}
+
+{% block content %}
+
+<h1>🎬 Clips de la semana</h1>
+<p>Los mejores momentos de los directos agendados esta semana.</p>
+
+{% if clips %}
+<div class="clips-grid">
+    {% for c in clips %}
+    <div class="clip-card" onclick="abrirClip('{{ c.embed_url }}', '{{ c.titulo }}')">
+
+        <!-- Thumbnail -->
+        <div class="clip-thumb">
+            {% if c.thumbnail_url %}
+                <img src="{{ c.thumbnail_url }}" alt="{{ c.titulo }}">
+            {% else %}
+                <div class="clip-thumb-placeholder">🎬</div>
+            {% endif %}
+            <div class="clip-play">▶</div>
+        </div>
+
+        <!-- Info -->
+        <div class="clip-info">
+            <h3>{{ c.titulo }}</h3>
+            <p class="clip-meta">
+                👤 {{ c.usuario.display_name }}
+                · ⏱ {{ "%.0f"|format(c.duracion) }}s
+                · 👁 {{ c.vistas }}
+            </p>
+            <a href="{{ c.url }}" target="_blank" class="clip-link"
+               onclick="event.stopPropagation()">Ver en Twitch →</a>
+        </div>
+
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="emitiendo-vacio">
+    <div class="emitiendo-vacio-icono">🎬</div>
+    <h2>No hay clips esta semana todavía</h2>
+    <p>Los clips aparecerán aquí automáticamente durante los directos agendados.</p>
+</div>
+{% endif %}
+
+<!-- Modal reproductor -->
+<div id="clip-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85);
+     z-index:1000; align-items:center; justify-content:center; padding:20px;"
+     onclick="cerrarClip()">
+    <div style="background:#0a0a1a; border:1px solid rgba(255,255,255,0.15); border-radius:14px;
+                padding:20px; max-width:860px; width:100%; position:relative;"
+         onclick="event.stopPropagation()">
+        <button onclick="cerrarClip()" style="
+            position:absolute; top:12px; right:14px;
+            background:rgba(255,255,255,0.1); border:none; color:white;
+            width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1rem;">✕</button>
+        <h3 id="clip-modal-titulo" style="margin:0 0 14px; padding-right:40px;"></h3>
+        <div style="position:relative; padding-bottom:56.25%; height:0; overflow:hidden; border-radius:8px;">
+            <iframe id="clip-iframe" src="" allowfullscreen
+                    style="position:absolute; top:0; left:0; width:100%; height:100%; border:none;">
+            </iframe>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+.clips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.clip-card {
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.clip-card:hover {
+    transform: translateY(-4px);
+    border-color: #9146FF;
+    box-shadow: 0 8px 24px rgba(145,70,255,0.25);
+}
+
+.clip-thumb {
+    position: relative;
+    width: 100%;
+    height: 160px;
+    overflow: hidden;
+    background: #0a0a1a;
+}
+.clip-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+    transition: 0.3s;
+}
+.clip-card:hover .clip-thumb img { transform: scale(1.05); }
+
+.clip-play {
+    position: absolute;
+    inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.35);
+    font-size: 2.5rem;
+    opacity: 0;
+    transition: 0.2s;
+}
+.clip-card:hover .clip-play { opacity: 1; }
+
+.clip-thumb-placeholder {
+    width: 100%; height: 160px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3rem; background: rgba(145,70,255,0.1);
+}
+
+.clip-info { padding: 14px 16px; }
+.clip-info h3 {
+    margin: 0 0 6px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.clip-meta {
+    font-size: 0.78rem;
+    opacity: 0.55;
+    margin: 0 0 10px;
+}
+.clip-link {
+    font-size: 0.8rem;
+    color: #9146FF;
+    text-decoration: none;
+    font-weight: 600;
+}
+.clip-link:hover { color: #b57aff; }
+</style>
+
+<script>
+function abrirClip(embedUrl, titulo) {
+    document.getElementById('clip-modal-titulo').textContent = titulo;
+    document.getElementById('clip-iframe').src = embedUrl;
+    document.getElementById('clip-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+function cerrarClip() {
+    document.getElementById('clip-iframe').src = '';
+    document.getElementById('clip-modal').style.display = 'none';
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') cerrarClip();
+});
+</script>
+{% endblock %}
