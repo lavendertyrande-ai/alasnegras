@@ -1,13 +1,12 @@
 # -----------------------------------------------------------
 # IMPORTS
 # -----------------------------------------------------------
-from sched import scheduler
-
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta, time
+from functools import wraps
 import requests, os, pytz
 
 from db import db
@@ -28,7 +27,6 @@ migrate = Migrate(app, db)
 
 with app.app_context():
     db.create_all()
-    # Crear códigos de admin por defecto si no existen
     if AdminCode.query.count() == 0:
         db.session.add_all([
             AdminCode(codigo="admin-patry-2026",  nombre="Patry"),
@@ -45,8 +43,24 @@ TWITCH_CLIENT_ID     = os.environ.get("TWITCH_CLIENT_ID",     "k02pn5l6olnt5tfn8
 TWITCH_CLIENT_SECRET = os.environ.get("TWITCH_CLIENT_SECRET", "n33waq1ied91ve49g79n4xnwtvszw6")
 TWITCH_REDIRECT_URI  = os.environ.get("TWITCH_REDIRECT_URI",  "http://localhost:5000/callback_twitch")
 
-# Zona horaria de España
 TZ_SPAIN = pytz.timezone("Europe/Madrid")
+
+
+# -----------------------------------------------------------
+# TELEGRAM
+# -----------------------------------------------------------
+def enviar_mensaje_telegram(mensaje):
+    token   = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    if not token or not chat_id:
+        return
+    try:
+        requests.post(
+            f"https://api.telegram.org/bot{token}/sendMessage",
+            data={"chat_id": chat_id, "text": mensaje, "parse_mode": "HTML"}
+        )
+    except Exception as e:
+        print(f"Error enviando mensaje Telegram: {e}")
 
 
 # -----------------------------------------------------------
@@ -56,8 +70,34 @@ def reset_reservas_apoyo():
     with app.app_context():
         ReservaApoyo.query.delete()
         db.session.commit()
+        print(">>> Reservas reseteadas:", datetime.utcnow())
+
+
+def notificar_directos_telegram():
+    with app.app_context():
+        ahora_spain = hora_spain()
+        dia_actual  = ahora_spain.weekday()
+        hora_actual = ahora_spain.hour
+
+        slots = SlotApoyo.query.all()
+        mapa  = {(s.dia_semana, s.hora_inicio.hour): s for s in slots}
+        slot_actual = mapa.get((dia_actual, hora_actual))
+
+        if not slot_actual or not slot_actual.reservas:
+            return
+
+        lineas = ["🎮 <b>¡Hora de apoyar en Twitch!</b>\n"]
+        for reserva in slot_actual.reservas:
+            u = reserva.usuario
+            if u:
+                lineas.append(f"👤 <b>{u.display_name}</b>")
+                lineas.append(f"🔗 https://twitch.tv/{u.login}\n")
+        lineas.append("¡Entra y apóyales ahora! 🖤")
+        enviar_mensaje_telegram("\n".join(lineas))
+
 
 scheduler = BackgroundScheduler()
+
 scheduler.add_job(
     func=reset_reservas_apoyo,
     trigger="cron",
@@ -67,16 +107,22 @@ scheduler.add_job(
     timezone=pytz.timezone("Europe/Madrid")
 )
 
-# Solo arrancar scheduler si NO estamos en el proceso de recarga de Flask debug
+scheduler.add_job(
+    func=notificar_directos_telegram,
+    trigger="cron",
+    minute=0,
+    timezone=pytz.timezone("Europe/Madrid")
+)
+
 if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
     scheduler.start()
+
 
 # -----------------------------------------------------------
 # HELPERS
 # -----------------------------------------------------------
 
 def hora_spain():
-    """Devuelve el datetime actual en hora de España."""
     return datetime.now(TZ_SPAIN)
 
 
@@ -107,9 +153,9 @@ def get_or_create_twitch_user_from_session():
 
 
 def semana_actual_bounds():
-    ahora        = datetime.utcnow()
-    inicio       = ahora - timedelta(days=ahora.weekday())
-    inicio       = inicio.replace(hour=0, minute=0, second=0, microsecond=0)
+    ahora  = datetime.utcnow()
+    inicio = ahora - timedelta(days=ahora.weekday())
+    inicio = inicio.replace(hour=0, minute=0, second=0, microsecond=0)
     return inicio, inicio + timedelta(days=7)
 
 
@@ -123,10 +169,6 @@ def get_twitch_app_token():
 
 
 def get_stream_info(twitch_id=None, login=None, token=None):
-    """
-    Devuelve dict con: is_live, thumbnail_url, avatar_url, channel_url.
-    Acepta twitch_id o login (al menos uno debe darse).
-    """
     if not token:
         token = get_twitch_app_token()
 
@@ -135,9 +177,8 @@ def get_stream_info(twitch_id=None, login=None, token=None):
         "Authorization": f"Bearer {token}",
     }
 
-    # --- Stream ---
-    param_key   = "user_id" if twitch_id else "user_login"
-    param_val   = twitch_id or login
+    param_key  = "user_id" if twitch_id else "user_login"
+    param_val  = twitch_id or login
     stream_data = requests.get(
         "https://api.twitch.tv/helix/streams",
         headers=headers, params={param_key: param_val}
@@ -149,16 +190,15 @@ def get_stream_info(twitch_id=None, login=None, token=None):
         raw = stream_data[0].get("thumbnail_url", "")
         thumbnail_url = raw.replace("{width}x{height}", "320x180")
 
-    # --- User (avatar + login) ---
     user_param = {"id": twitch_id} if twitch_id else {"login": login}
     user_data  = requests.get(
         "https://api.twitch.tv/helix/users",
         headers=headers, params=user_param
     ).json().get("data", [])
 
-    avatar_url   = user_data[0].get("profile_image_url") if user_data else None
+    avatar_url     = user_data[0].get("profile_image_url") if user_data else None
     resolved_login = user_data[0].get("login", login or "") if user_data else (login or "")
-    resolved_id    = user_data[0].get("id")               if user_data else twitch_id
+    resolved_id    = user_data[0].get("id")                if user_data else twitch_id
 
     return {
         "is_live":       is_live,
@@ -172,21 +212,16 @@ def get_stream_info(twitch_id=None, login=None, token=None):
 
 
 def get_or_create_user_by_login(login: str) -> TwitchUser | None:
-    """
-    Busca o crea un TwitchUser a partir del login de Twitch.
-    Consulta la API para obtener los datos reales.
-    """
     login = login.strip().lower()
     user  = TwitchUser.query.filter_by(login=login).first()
     if user:
         return user
 
-    # Consultamos la API de Twitch
     token = get_twitch_app_token()
     info  = get_stream_info(login=login, token=token)
 
     if not info.get("twitch_id"):
-        return None   # login no existe en Twitch
+        return None
 
     user = TwitchUser(
         twitch_id    = info["twitch_id"],
@@ -205,8 +240,8 @@ def generar_slots_agenda_base():
         SlotApoyo.query.delete()
         db.session.commit()
 
-        for dia in range(0, 5):          # lunes–viernes
-            for hora in range(15, 24):   # 15:00–23:00
+        for dia in range(0, 5):
+            for hora in range(15, 24):
                 inicio = time(hora, 0)
                 fin    = time((hora + 1) % 24, 0)
                 if not SlotApoyo.query.filter_by(dia_semana=dia,
@@ -221,7 +256,6 @@ def generar_slots_agenda_base():
 # -----------------------------------------------------------
 # DECORADOR: requiere admin
 # -----------------------------------------------------------
-from functools import wraps
 
 def admin_required(f):
     @wraps(f)
@@ -278,9 +312,7 @@ def callback_twitch():
     session["es_admin"]     = False
     session["modo_admin"]   = False
 
-    # Guardar/actualizar en BD
     get_or_create_twitch_user_from_session()
-
     return redirect(url_for("index"))
 
 
@@ -291,31 +323,27 @@ def logout():
 
 
 # -----------------------------------------------------------
-# LOGIN ADMIN (con código)
+# LOGIN ADMIN
 # -----------------------------------------------------------
 
 @app.route("/admin_codigo", methods=["GET", "POST"])
 def admin_codigo():
-    """Página donde cualquier usuario (logueado o no) introduce el código admin."""
     if request.method == "POST":
-        codigo = request.form.get("codigo", "").strip()
+        codigo   = request.form.get("codigo", "").strip()
         code_obj = AdminCode.query.filter_by(codigo=codigo, activo=True).first()
-
         if code_obj:
-            session["es_admin"]   = True
-            session["modo_admin"] = True
+            session["es_admin"]     = True
+            session["modo_admin"]   = True
             session["admin_nombre"] = code_obj.nombre
             flash(f"Bienvenido al panel de administración, {code_obj.nombre}.", "success")
             return redirect(url_for("admin_agendas_calendario"))
         else:
             flash("Código incorrecto.", "error")
-
     return render_template("admin_codigo.html")
 
 
 @app.route("/admin_login")
 def admin_login():
-    """Activa modo admin si ya tienes sesión con es_admin=True (login Twitch + código)."""
     if not session.get("es_admin"):
         return redirect(url_for("admin_codigo"))
     session["modo_admin"] = True
@@ -345,7 +373,7 @@ def index():
 @app.route("/emitiendo")
 def emitiendo():
     ahora_spain = hora_spain()
-    dia_actual  = ahora_spain.weekday()   # 0=lunes
+    dia_actual  = ahora_spain.weekday()
     hora_actual = ahora_spain.hour
 
     slots = SlotApoyo.query.all()
@@ -363,8 +391,8 @@ def emitiendo():
                                    login=usuario.login,
                                    token=app_token)
             reservas_info.append({
-                "display_name": usuario.display_name,
-                "login":        usuario.login,
+                "display_name":  usuario.display_name,
+                "login":         usuario.login,
                 "thumbnail_url": info["thumbnail_url"],
                 "avatar_url":    info["avatar_url"],
                 "channel_url":   info["channel_url"],
@@ -387,7 +415,7 @@ def calendario():
 
 
 # -----------------------------------------------------------
-# AGENDAS (usuario)
+# AGENDAS
 # -----------------------------------------------------------
 
 @app.route("/agendas")
@@ -464,7 +492,7 @@ def cancelar_reserva(reserva_id):
 
 
 # -----------------------------------------------------------
-# ADMIN — AGENDAS / CALENDARIO
+# ADMIN — AGENDAS
 # -----------------------------------------------------------
 
 @app.route("/admin_agendas_calendario", methods=["GET", "POST"])
@@ -473,9 +501,8 @@ def admin_agendas_calendario():
     if request.method == "POST":
         action = request.form.get("action", "add")
 
-        # ── AÑADIR RESERVA ──────────────────────────────────
         if action == "add":
-            slot_id    = request.form.get("slot_id")
+            slot_id      = request.form.get("slot_id")
             twitch_login = request.form.get("twitch_login", "").strip().lower()
 
             if not slot_id or not twitch_login:
@@ -506,12 +533,11 @@ def admin_agendas_calendario():
             db.session.commit()
             flash(f"Reserva de {usuario.display_name} creada correctamente.", "success")
 
-        # ── MOVER RESERVA ────────────────────────────────────
         elif action == "move":
-            reserva_id   = int(request.form.get("reserva_id"))
+            reserva_id    = int(request.form.get("reserva_id"))
             nuevo_slot_id = int(request.form.get("nuevo_slot_id"))
-            reserva      = ReservaApoyo.query.get_or_404(reserva_id)
-            nuevo_slot   = SlotApoyo.query.get_or_404(nuevo_slot_id)
+            reserva       = ReservaApoyo.query.get_or_404(reserva_id)
+            nuevo_slot    = SlotApoyo.query.get_or_404(nuevo_slot_id)
 
             if ReservaApoyo.query.filter_by(usuario_id=reserva.usuario_id,
                                              slot_id=nuevo_slot_id).first():
@@ -525,13 +551,10 @@ def admin_agendas_calendario():
 
         return redirect(url_for("admin_agendas_calendario"))
 
-    # GET
-    slots    = SlotApoyo.query.all()
-    mapa     = {(s.dia_semana, s.hora_inicio.hour): s for s in slots}
+    slots     = SlotApoyo.query.all()
+    mapa      = {(s.dia_semana, s.hora_inicio.hour): s for s in slots}
     all_slots = SlotApoyo.query.order_by(SlotApoyo.dia_semana, SlotApoyo.hora_inicio).all()
-    return render_template("admin_agendas_calendario.html",
-                           slots=mapa,
-                           all_slots=all_slots)
+    return render_template("admin_agendas_calendario.html", slots=mapa, all_slots=all_slots)
 
 
 @app.route("/admin_eliminar_reserva/<int:reserva_id>")
@@ -553,7 +576,7 @@ def admin_generar_slots():
 
 
 # -----------------------------------------------------------
-# ADMIN — GESTIÓN DE CÓDIGOS
+# ADMIN — CÓDIGOS
 # -----------------------------------------------------------
 
 @app.route("/admin_codigos", methods=["GET", "POST"])
@@ -623,20 +646,20 @@ def eventos():
 @admin_required
 def admin_eventos():
     if request.method == "POST":
-        titulo  = request.form["titulo"]
+        titulo     = request.form["titulo"]
         inicio_str = request.form.get("inicio", "").strip()
-        fin_str = request.form.get("fin", "").strip()
-        inicio = datetime.strptime(inicio_str, "%Y-%m-%dT%H:%M") if inicio_str else None
-        fin = datetime.strptime(fin_str, "%Y-%m-%dT%H:%M") if fin_str else None
-        url     = request.form.get("url")
-        contenido = request.form.get("contenido", "")
+        fin_str    = request.form.get("fin", "").strip()
+        inicio     = datetime.strptime(inicio_str, "%Y-%m-%dT%H:%M") if inicio_str else None
+        fin        = datetime.strptime(fin_str,    "%Y-%m-%dT%H:%M") if fin_str    else None
+        url        = request.form.get("url")
+        contenido  = request.form.get("contenido", "")
         db.session.add(Evento(titulo=titulo, fecha_inicio=inicio,
                                fecha_fin=fin, url_twitch=url, contenido=contenido))
         db.session.commit()
         return redirect(url_for("eventos"))
 
     return render_template("admin_eventos.html",
-                           eventos=Evento.query.order_by(Evento.fecha_inicio).all())
+                           eventos=Evento.query.order_by(Evento.creado).all())
 
 
 @app.route("/editar_evento/<int:id>", methods=["GET", "POST"])
@@ -644,11 +667,11 @@ def admin_eventos():
 def editar_evento(id):
     evento = Evento.query.get_or_404(id)
     if request.method == "POST":
-        evento.titulo       = request.form["titulo"]
-        inicio_str = request.form.get("inicio", "").strip()
-        fin_str = request.form.get("fin", "").strip()
+        evento.titulo      = request.form["titulo"]
+        inicio_str         = request.form.get("inicio", "").strip()
+        fin_str            = request.form.get("fin", "").strip()
         evento.fecha_inicio = datetime.strptime(inicio_str, "%Y-%m-%dT%H:%M") if inicio_str else None
-        evento.fecha_fin = datetime.strptime(fin_str, "%Y-%m-%dT%H:%M") if fin_str else None
+        evento.fecha_fin    = datetime.strptime(fin_str,    "%Y-%m-%dT%H:%M") if fin_str    else None
         evento.url_twitch   = request.form.get("url")
         evento.contenido    = request.form.get("contenido", "")
         db.session.commit()
