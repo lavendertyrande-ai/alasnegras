@@ -12,6 +12,7 @@ import requests, os, pytz
 from db import db
 from werkzeug.utils import secure_filename
 from models import TwitchUser, Directo, SlotApoyo, ReservaApoyo, Evento, AdminCode
+import bot_irc
 
 
 # -----------------------------------------------------------
@@ -64,18 +65,22 @@ def enviar_mensaje_telegram(mensaje):
 
 
 # -----------------------------------------------------------
-# SCHEDULER
+# SCHEDULER — FUNCIONES
 # -----------------------------------------------------------
+
 def reset_reservas_apoyo():
+    """Resetea reservas, clips y registros de apoyo cada sábado a las 23:59."""
     with app.app_context():
-        from models import Clip
+        from models import Clip, RegistroApoyo
         Clip.query.delete()
         ReservaApoyo.query.delete()
+        RegistroApoyo.query.delete()
         db.session.commit()
-        print(">>> Reservas y clips reseteados:", datetime.utcnow())
+        print(">>> Reservas, clips y apoyos reseteados:", datetime.utcnow())
 
 
 def notificar_directos_telegram():
+    """Cada hora en punto avisa por Telegram y une el bot a los canales agendados."""
     with app.app_context():
         ahora_spain = hora_spain()
         dia_actual  = ahora_spain.weekday()
@@ -97,43 +102,34 @@ def notificar_directos_telegram():
         lineas.append("¡Entra y apóyales ahora! 🖤")
         enviar_mensaje_telegram("\n".join(lineas))
 
-
-scheduler = BackgroundScheduler()
-
-scheduler.add_job(
-    func=reset_reservas_apoyo,
-    trigger="cron",
-    day_of_week="sat",
-    hour=23,
-    minute=59,
-    timezone=pytz.timezone("Europe/Madrid")
-)
-
-scheduler.add_job(
-    func=notificar_directos_telegram,
-    trigger="cron",
-    minute=0,
-    timezone=pytz.timezone("Europe/Madrid")
-)
-
-if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-    scheduler.start()
-
-# -----------------------------------------------------------
-# CLIPS
-# -----------------------------------------------------------
-
-@app.route("/clips")
-def clips():
-    from models import Clip
-    lista = Clip.query.order_by(Clip.creado_en.desc()).all()
-    return render_template("clips.html", clips=lista)
+        # Unir bot IRC a los canales agendados
+        for reserva in slot_actual.reservas:
+            if reserva.usuario:
+                bot_irc.unirse_canal(reserva.usuario.login)
 
 
+def desconectar_bot_canales():
+    """A los 55 minutos de cada hora guarda los datos y sale de los canales."""
+    with app.app_context():
+        ahora_spain  = hora_spain()
+        hora_anterior = ahora_spain - timedelta(hours=1)
+        dia_actual   = hora_anterior.weekday()
+        hora_actual  = hora_anterior.hour
+
+        slots = SlotApoyo.query.all()
+        mapa  = {(s.dia_semana, s.hora_inicio.hour): s for s in slots}
+        slot_anterior = mapa.get((dia_actual, hora_actual))
+
+        if not slot_anterior or not slot_anterior.reservas:
+            return
+
+        for reserva in slot_anterior.reservas:
+            if reserva.usuario:
+                bot_irc.salir_canal(reserva.usuario.login)
 
 
 def recoger_clips_streamers():
-    """Recoge clips recientes de los streamers agendados en la hora actual."""
+    """Cada 15 minutos recoge clips de los streamers agendados en la hora actual."""
     with app.app_context():
         from models import Clip
         ahora_spain = hora_spain()
@@ -161,33 +157,68 @@ def recoger_clips_streamers():
             resp = requests.get(
                 "https://api.twitch.tv/helix/clips",
                 headers=headers,
-                params={
-                    "broadcaster_id": usuario.twitch_id,
-                    "first": 10
-                }
+                params={"broadcaster_id": usuario.twitch_id, "first": 10}
             ).json()
 
             for clip_data in resp.get("data", []):
-                # Solo guardar si no existe ya
                 if Clip.query.filter_by(clip_id=clip_data["id"]).first():
                     continue
 
                 embed = f"https://clips.twitch.tv/embed?clip={clip_data['id']}&parent=alasnegras.onrender.com"
 
                 db.session.add(Clip(
-                    clip_id      = clip_data["id"],
-                    usuario_id   = usuario.id,
-                    titulo       = clip_data.get("title", "Sin título"),
-                    url          = clip_data.get("url", ""),
-                    thumbnail_url= clip_data.get("thumbnail_url", ""),
-                    embed_url    = embed,
-                    duracion     = clip_data.get("duration", 0),
-                    vistas       = clip_data.get("view_count", 0),
+                    clip_id       = clip_data["id"],
+                    usuario_id    = usuario.id,
+                    titulo        = clip_data.get("title", "Sin título"),
+                    url           = clip_data.get("url", ""),
+                    thumbnail_url = clip_data.get("thumbnail_url", ""),
+                    embed_url     = embed,
+                    duracion      = clip_data.get("duration", 0),
+                    vistas        = clip_data.get("view_count", 0),
                 ))
 
         db.session.commit()
         print(">>> Clips recogidos:", datetime.utcnow())
 
+
+# -----------------------------------------------------------
+# SCHEDULER — INICIALIZACIÓN
+# -----------------------------------------------------------
+scheduler = BackgroundScheduler()
+
+scheduler.add_job(
+    func=reset_reservas_apoyo,
+    trigger="cron",
+    day_of_week="sat",
+    hour=23,
+    minute=59,
+    timezone=pytz.timezone("Europe/Madrid")
+)
+
+scheduler.add_job(
+    func=notificar_directos_telegram,
+    trigger="cron",
+    minute=0,
+    timezone=pytz.timezone("Europe/Madrid")
+)
+
+scheduler.add_job(
+    func=desconectar_bot_canales,
+    trigger="cron",
+    minute=55,
+    timezone=pytz.timezone("Europe/Madrid")
+)
+
+scheduler.add_job(
+    func=recoger_clips_streamers,
+    trigger="cron",
+    minute="*/15",
+    timezone=pytz.timezone("Europe/Madrid")
+)
+
+if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+    scheduler.start()
+    bot_irc.iniciar_bot(app)
 
 
 # -----------------------------------------------------------
@@ -195,10 +226,12 @@ def recoger_clips_streamers():
 # -----------------------------------------------------------
 
 def hora_spain():
+    """Devuelve el datetime actual en hora de España."""
     return datetime.now(TZ_SPAIN)
 
 
 def get_or_create_twitch_user_from_session():
+    """Crea o recupera un TwitchUser a partir de los datos de sesión."""
     twitch_id    = session.get("twitch_id")
     display_name = session.get("display_name")
     login        = session.get("login")
@@ -225,6 +258,7 @@ def get_or_create_twitch_user_from_session():
 
 
 def semana_actual_bounds():
+    """Devuelve el inicio y fin de la semana actual en UTC."""
     ahora  = datetime.utcnow()
     inicio = ahora - timedelta(days=ahora.weekday())
     inicio = inicio.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -232,6 +266,7 @@ def semana_actual_bounds():
 
 
 def get_twitch_app_token():
+    """Obtiene un token de aplicación de Twitch."""
     resp = requests.post("https://id.twitch.tv/oauth2/token", data={
         "client_id":     TWITCH_CLIENT_ID,
         "client_secret": TWITCH_CLIENT_SECRET,
@@ -241,6 +276,7 @@ def get_twitch_app_token():
 
 
 def get_stream_info(twitch_id=None, login=None, token=None):
+    """Devuelve info de stream y avatar para un usuario de Twitch."""
     if not token:
         token = get_twitch_app_token()
 
@@ -284,6 +320,7 @@ def get_stream_info(twitch_id=None, login=None, token=None):
 
 
 def get_or_create_user_by_login(login: str) -> TwitchUser | None:
+    """Busca o crea un TwitchUser a partir del login de Twitch."""
     login = login.strip().lower()
     user  = TwitchUser.query.filter_by(login=login).first()
     if user:
@@ -309,8 +346,8 @@ def get_or_create_user_by_login(login: str) -> TwitchUser | None:
 def generar_slots_agenda_base():
     """Solo añade slots que no existen — NO borra reservas."""
     with app.app_context():
-        for dia in range(0, 6):          # lunes–sábado
-            for hora in range(15, 24):   # 15:00–23:00
+        for dia in range(0, 6):
+            for hora in range(15, 24):
                 inicio = time(hora, 0)
                 fin    = time((hora + 1) % 24, 0)
                 if not SlotApoyo.query.filter_by(dia_semana=dia,
@@ -428,7 +465,7 @@ def admin_logout():
 
 
 # -----------------------------------------------------------
-# RUTAS PRINCIPALES
+# PÁGINA PRINCIPAL
 # -----------------------------------------------------------
 
 @app.route("/")
@@ -759,6 +796,16 @@ def eliminar_evento(id):
     return redirect(url_for("eventos"))
 
 
+# -----------------------------------------------------------
+# CLIPS
+# -----------------------------------------------------------
+
+@app.route("/clips")
+def clips():
+    from models import Clip
+    lista = Clip.query.order_by(Clip.creado_en.desc()).all()
+    return render_template("clips.html", clips=lista)
+
 
 # -----------------------------------------------------------
 # APOYOS
@@ -769,8 +816,18 @@ def apoyos():
     if not session.get("twitch_id"):
         flash("Debes iniciar sesión para ver los apoyos.", "error")
         return redirect(url_for("login_twitch"))
-    return render_template("apoyos.html")
-
+    from models import RegistroApoyo
+    semana_actual = datetime.now(TZ_SPAIN).strftime("%Y-W%W")
+    apoyos_semana = RegistroApoyo.query.filter_by(
+        semana=semana_actual
+    ).order_by(RegistroApoyo.minutos.desc()).all()
+    apoyos_historico = RegistroApoyo.query.order_by(
+        RegistroApoyo.minutos.desc()
+    ).all()
+    return render_template("apoyos.html",
+                           apoyos_semana=apoyos_semana,
+                           apoyos_historico=apoyos_historico,
+                           semana_actual=semana_actual)
 
 
 # -----------------------------------------------------------
