@@ -57,6 +57,7 @@ def reset_reservas_apoyo():
         ReservaApoyo.query.delete()
         db.session.commit()
 
+scheduler = BackgroundScheduler()
 scheduler.add_job(
     func=reset_reservas_apoyo,
     trigger="cron",
@@ -69,7 +70,6 @@ scheduler.add_job(
 # Solo arrancar scheduler si NO estamos en el proceso de recarga de Flask debug
 if not app.debug or os.environ.get("WERKZEUG_RUN_MAIN") == "true":
     scheduler.start()
-
 
 # -----------------------------------------------------------
 # HELPERS
