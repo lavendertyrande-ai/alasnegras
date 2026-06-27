@@ -689,6 +689,16 @@ def eliminar_evento(id):
     return redirect(url_for("eventos"))
 
 
+
+
+@app.route("/test_telegram")
+@admin_required
+def test_telegram():
+    enviar_mensaje_telegram("🎮 <b>¡Prueba del bot de Alas Negras!</b>\n\nEl bot está funcionando correctamente. 🖤")
+    flash("Mensaje enviado a Telegram.", "success")
+    return redirect(url_for("admin_agendas_calendario"))
+
+
 # -----------------------------------------------------------
 # EJECUCIÓN
 # -----------------------------------------------------------
