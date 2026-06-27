@@ -62,6 +62,7 @@ def enviar_mensaje_telegram(mensaje):
     except Exception as e:
         print(f"Error enviando mensaje Telegram: {e}")
 
+
 # -----------------------------------------------------------
 # SCHEDULER
 # -----------------------------------------------------------
@@ -176,8 +177,8 @@ def get_stream_info(twitch_id=None, login=None, token=None):
         "Authorization": f"Bearer {token}",
     }
 
-    param_key  = "user_id" if twitch_id else "user_login"
-    param_val  = twitch_id or login
+    param_key   = "user_id" if twitch_id else "user_login"
+    param_val   = twitch_id or login
     stream_data = requests.get(
         "https://api.twitch.tv/helix/streams",
         headers=headers, params={param_key: param_val}
@@ -234,13 +235,10 @@ def get_or_create_user_by_login(login: str) -> TwitchUser | None:
 
 
 def generar_slots_agenda_base():
+    """Solo añade slots que no existen — NO borra reservas."""
     with app.app_context():
-        ReservaApoyo.query.delete()
-        SlotApoyo.query.delete()
-        db.session.commit()
-
-        for dia in range(0, 6):
-            for hora in range(15, 24):
+        for dia in range(0, 6):          # lunes–sábado
+            for hora in range(15, 24):   # 15:00–23:00
                 inicio = time(hora, 0)
                 fin    = time((hora + 1) % 24, 0)
                 if not SlotApoyo.query.filter_by(dia_semana=dia,
@@ -250,6 +248,7 @@ def generar_slots_agenda_base():
                                              hora_inicio=inicio,
                                              hora_fin=fin))
         db.session.commit()
+        print(">>> Slots generados sin borrar reservas")
 
 
 # -----------------------------------------------------------
@@ -666,9 +665,9 @@ def admin_eventos():
 def editar_evento(id):
     evento = Evento.query.get_or_404(id)
     if request.method == "POST":
-        evento.titulo      = request.form["titulo"]
-        inicio_str         = request.form.get("inicio", "").strip()
-        fin_str            = request.form.get("fin", "").strip()
+        evento.titulo       = request.form["titulo"]
+        inicio_str          = request.form.get("inicio", "").strip()
+        fin_str             = request.form.get("fin", "").strip()
         evento.fecha_inicio = datetime.strptime(inicio_str, "%Y-%m-%dT%H:%M") if inicio_str else None
         evento.fecha_fin    = datetime.strptime(fin_str,    "%Y-%m-%dT%H:%M") if fin_str    else None
         evento.url_twitch   = request.form.get("url")
@@ -686,8 +685,6 @@ def eliminar_evento(id):
     db.session.delete(evento)
     db.session.commit()
     return redirect(url_for("eventos"))
-
-
 
 
 # -----------------------------------------------------------
