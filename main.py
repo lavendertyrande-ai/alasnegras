@@ -816,19 +816,24 @@ def apoyos():
     if not session.get("twitch_id"):
         flash("Debes iniciar sesión para ver los apoyos.", "error")
         return redirect(url_for("login_twitch"))
-    from models import RegistroApoyo
-    semana_actual = datetime.now(TZ_SPAIN).strftime("%Y-W%W")
-    apoyos_semana = RegistroApoyo.query.filter_by(
-        semana=semana_actual
-    ).order_by(RegistroApoyo.minutos.desc()).all()
-    apoyos_historico = RegistroApoyo.query.order_by(
-        RegistroApoyo.minutos.desc()
-    ).all()
-    return render_template("apoyos.html",
-                           apoyos_semana=apoyos_semana,
-                           apoyos_historico=apoyos_historico,
-                           semana_actual=semana_actual)
-
+    try:
+        semana_actual = datetime.now(TZ_SPAIN).strftime("%Y-W%W")
+        apoyos_semana = RegistroApoyo.query.filter_by(
+            semana=semana_actual
+        ).order_by(RegistroApoyo.minutos.desc()).all()
+        apoyos_historico = RegistroApoyo.query.order_by(
+            RegistroApoyo.minutos.desc()
+        ).all()
+        return render_template("apoyos.html",
+                               apoyos_semana=apoyos_semana,
+                               apoyos_historico=apoyos_historico,
+                               semana_actual=semana_actual)
+    except Exception as e:
+        print(f">>> Error en /apoyos: {e}")
+        return render_template("apoyos.html",
+                               apoyos_semana=[],
+                               apoyos_historico=[],
+                               semana_actual="")
 
 # -----------------------------------------------------------
 # EJECUCIÓN
