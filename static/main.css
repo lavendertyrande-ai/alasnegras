@@ -282,16 +282,17 @@ p, li { font-size: 1rem; line-height: 1.65; }
     display: flex;
     flex-direction: column;
     gap: 2px;
-    min-width: 720px;   /* permite scroll en móvil */
+    min-width: 800px;
     width: 100%;
     max-width: 900px;
     margin: 0 auto;
 }
 
+
 .agenda-fila {
     display: grid;
-    grid-template-columns: 52px repeat(6, 1fr);
-    gap: 2px;
+    grid-template-columns: 52px repeat(6, minmax(0, 1fr));
+    gap: 3px;
 }
 
 
@@ -332,19 +333,20 @@ p, li { font-size: 1rem; line-height: 1.65; }
 .slot-parcial { background: #0f2b6a; }
 .slot-completo{ background: #153b8c; }
 
+
 .reserva-id {
     background: #9b59b6;
     color: white;
     font-weight: 700;
     padding: 2px 5px;
     border-radius: 4px;
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     text-align: center;
     width: 100%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%;
+    box-sizing: border-box;
 }
 
 .btn-reservar {
