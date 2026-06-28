@@ -341,7 +341,10 @@ p, li { font-size: 1rem; line-height: 1.65; }
     font-size: 0.68rem;
     text-align: center;
     width: 100%;
-    word-break: break-word;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
 .btn-reservar {
@@ -446,7 +449,12 @@ p, li { font-size: 1rem; line-height: 1.65; }
     border-radius: 5px; text-align: center;
     width: 95%; font-size: 0.7rem; line-height: 1.2;
     box-shadow: 0 0 4px #9146FF, 0 0 7px #772ce8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+
+
 .directo-card:hover {
     box-shadow: 0 0 6px #b57aff, 0 0 10px #a05cff;
     transform: scale(1.02);
